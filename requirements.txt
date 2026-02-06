@@ -1,0 +1,24 @@
+# Core dependencies
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+matplotlib>=3.4.0
+seaborn>=0.11.0
+scipy>=1.7.0
+
+# Deep Learning
+tensorflow>=2.8.0
+torch>=1.10.0
+
+# Transformers
+transformers>=4.20.0
+
+# Optional but recommended
+xgboost>=1.5.0
+joblib>=1.1.0
+
+# For saving models
+h5py>=3.6.0
+
+# Utilities
+tqdm>=4.62.0

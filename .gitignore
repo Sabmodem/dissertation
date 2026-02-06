@@ -1,3 +1,6 @@
 __pycache__
 *png
 data/files
+plots
+results
+logs
