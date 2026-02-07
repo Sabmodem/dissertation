@@ -73,15 +73,13 @@ class Experiment:
         print("Step 1: Loading and preparing data...")
         self.data_loader.load_data(data_file).split_data().preprocess()
         
-        # Step 2: Build model
-        print("\nStep 2: Building model...")
-        self.model.build_model()
-        
-        # Step 3: Train model
-        print("\nStep 3: Training model...")
+        # Step 2: Get data for training
+        print("\nStep 2: Preparing training data...")
         X_train, y_train = self.data_loader.get_train_data()
         X_val, y_val = self.data_loader.get_val_data()
         
+        # Step 3: Train model (build happens automatically inside train())
+        print("\nStep 3: Training model...")
         self.training_history = self.model.train(X_train, y_train, X_val, y_val)
         
         # Step 4: Evaluate model
@@ -148,8 +146,7 @@ class Experiment:
         # Load and prepare data
         self.data_loader.load_data(data_file).split_data().preprocess()
         
-        # Build and train model
-        self.model.build_model()
+        # Build and train model (build happens inside train() for models that need data dimensions)
         X_train, y_train = self.data_loader.get_train_data()
         X_val, y_val = self.data_loader.get_val_data()
         

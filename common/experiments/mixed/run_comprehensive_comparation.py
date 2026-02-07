@@ -275,7 +275,7 @@ def run_comprehensive_comparison(
 if __name__ == "__main__":
     # Get data file
     try:
-        import config
+        import structuring.common.config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"

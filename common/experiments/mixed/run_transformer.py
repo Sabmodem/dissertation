@@ -17,7 +17,7 @@ def run_gpt2_experiment():
     """Run GPT-2 model experiment."""
     
     try:
-        import config
+        import structuring.common.config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"
@@ -61,7 +61,7 @@ def run_gpt2_experiment():
     print(f"   ✓ Model: {model}")
     
     # Create evaluator
-    evaluator = Evaluator(pos_label=1)
+    evaluator = Evaluator(pos_label=config.POS_LABEL)
     print(f"   ✓ Evaluator: {evaluator}")
     
     # Create visualizer
@@ -113,7 +113,7 @@ def run_finbert_experiment():
     """Run FinBERT model experiment (specialized for financial text)."""
     
     try:
-        import config
+        import structuring.common.config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"
@@ -157,7 +157,7 @@ def run_finbert_experiment():
     print(f"   ✓ Model: {model}")
     
     # Create evaluator and visualizer
-    evaluator = Evaluator(pos_label=1)
+    evaluator = Evaluator(pos_label=config.POS_LABEL)
     visualizer = Visualizer(
         save_dir="./plots/finbert",
         save_plots=True,
@@ -203,7 +203,7 @@ def compare_transformers():
     """Compare different transformer models."""
     
     try:
-        import config
+        import structuring.common.config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"

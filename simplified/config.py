@@ -1,0 +1,1 @@
+DATA_DIR = '/mnt/1/dissertation/data/prepared/'

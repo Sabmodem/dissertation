@@ -23,7 +23,7 @@ def run_model_comparison():
     
     # Configuration
     try:
-        import config
+        import structuring.common.config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"
@@ -41,7 +41,7 @@ def run_model_comparison():
     
     # Shared components
     vectorizer = TfidfVectorizer(max_features=5000)
-    evaluator = Evaluator(pos_label=1)
+    evaluator = Evaluator(pos_label=config.POS_LABEL)
     visualizer = Visualizer(
         save_dir="../plots/comparison",
         save_plots=True,

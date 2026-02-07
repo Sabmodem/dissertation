@@ -4,3 +4,7 @@ data/files
 plots
 results
 logs
+*.log
+*.dat
+*.ubj
+savings
