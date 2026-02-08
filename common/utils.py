@@ -1,12 +1,21 @@
 import sys
 import os
-# from datetime import datetime
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from core import Experiment, DataLoader, Evaluator, Visualizer
 import config as config
 import logging
+
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename=f'experiment_{datetime.now().strftime("%Y%m%d%H%M%S")}.log',
+        filemode='w'
+    )
 
 def make_experiment(model_name, model, vectorizer):
 
@@ -54,17 +63,17 @@ def make_experiment(model_name, model, vectorizer):
     )
 
     if config.SAVE_MODELS:
-        experiment.save_model(filepath=f'{models_dir}/model.dat')
+        experiment.save_model(filepath=f'{models_dir}/model.keras')
     if config.SAVE_SUMMARY:
         summary = experiment.get_results_summary()
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-        logger.addHandler(logging.FileHandler(f'./summary.log'))
-        logger.addHandler(logging.FileHandler(f'{summary_dir}/summary.log'))
-        logger.addHandler(logging.StreamHandler(sys.stdout))
+        # logger = logging.getLogger(__name__)
+        # logger.setLevel(logging.INFO)
+        # logger.addHandler(logging.FileHandler(f'./summary.log'))
+        # logger.addHandler(logging.FileHandler(f'{summary_dir}/summary.log'))
+        # logger.addHandler(logging.StreamHandler(sys.stdout))
         for dataset_name, metrics in summary.items():
-            logger.info(f"\n{dataset_name.upper()} SET:")
+            logging.info(f"{dataset_name.upper()} SET:")
             for metric_name, value in metrics.items():
-                logger.info(f"  {metric_name:12s}: {value:.4f}")
+                logging.info(f"{metric_name:12s}: {value:.4f}")
     
     return experiment, results

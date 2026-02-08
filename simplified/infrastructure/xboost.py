@@ -148,7 +148,6 @@ class XBoostAnalysisStep(AnalysisStep[xgb.XGBClassifier, XBoostDataDTO, XBoostEv
             data: XBoostDataDTO, 
             evaluation_results: XBoostEvaluationResultDTO
         ) -> XBoostAnalysisStepResult:
-        print(data, evaluation_results)
         validation_result = XBoostAnalysisStepResult(
             accuracy_score=accuracy_score(data.y_val, evaluation_results.y_val_pred),
             precision_score=precision_score(data.y_val, evaluation_results.y_val_pred),

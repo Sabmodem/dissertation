@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.base_model import BaseModel
+import logging
 
 
 class SklearnModel(BaseModel):
@@ -55,7 +56,7 @@ class SklearnModel(BaseModel):
         Returns:
             Dictionary with training info (empty for basic sklearn models)
         """
-        print(f"Training {self.estimator.__class__.__name__}...")
+        logging.info(f"Training {self.estimator.__class__.__name__}...")
         
         self.model.fit(X_train, y_train)
         self.is_trained = True
@@ -71,9 +72,9 @@ class SklearnModel(BaseModel):
         if X_val is not None and y_val is not None:
             val_score = self.model.score(X_val, y_val)
             history['val_score'] = val_score
-            print(f"Training complete. Train score: {train_score:.4f}, Val score: {val_score:.4f}")
+            logging.info(f"Training complete. Train score: {train_score:.4f}, Val score: {val_score:.4f}")
         else:
-            print(f"Training complete. Train score: {train_score:.4f}")
+            logging.info(f"Training complete. Train score: {train_score:.4f}")
         
         return history
     
@@ -138,7 +139,7 @@ class SklearnModel(BaseModel):
         
         import joblib
         joblib.dump(self.model, filepath)
-        print(f"Model saved to {filepath}")
+        logging.info(f"Model saved to {filepath}")
     
     def load_model(self, filepath: str) -> None:
         """
@@ -151,7 +152,7 @@ class SklearnModel(BaseModel):
         self.model = joblib.load(filepath)
         self.estimator = self.model
         self.is_trained = True
-        print(f"Model loaded from {filepath}")
+        logging.info(f"Model loaded from {filepath}")
     
     def get_feature_importance(self) -> Optional[np.ndarray]:
         """

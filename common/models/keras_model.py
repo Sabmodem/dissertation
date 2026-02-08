@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.base_model import BaseModel
+import logging
 
 # TensorFlow/Keras imports
 from tensorflow.keras.models import Sequential
@@ -128,10 +129,10 @@ class KerasModel(BaseModel):
             metrics=self.metrics
         )
         
-        print(f"Model built successfully:")
-        print(f"  Architecture: {self.input_dim} -> {' -> '.join(map(str, self.layers))} -> 1")
-        print(f"  Activation: {self.activation}, Dropout: {self.dropout_rate}")
-        print(f"  Optimizer: {self.optimizer_name}, LR: {self.learning_rate}")
+        logging.info(f"Model built successfully:")
+        logging.info(f"  Architecture: {self.input_dim} -> {' -> '.join(map(str, self.layers))} -> 1")
+        logging.info(f"  Activation: {self.activation}, Dropout: {self.dropout_rate}")
+        logging.info(f"  Optimizer: {self.optimizer_name}, LR: {self.learning_rate}")
     
     def set_input_dim(self, input_dim: int) -> 'KerasModel':
         """
@@ -171,7 +172,7 @@ class KerasModel(BaseModel):
                 self.input_dim = X_train.shape[1]
             self.build_model()
         
-        print(f"Training Keras model for up to {self.epochs} epochs...")
+        logging.info(f"Training Keras model for up to {self.epochs} epochs...")
         
         # Setup callbacks
         callbacks = []
@@ -206,10 +207,10 @@ class KerasModel(BaseModel):
         
         # Print final metrics
         final_epoch = len(history.history['loss'])
-        print(f"\nTraining completed after {final_epoch} epochs")
-        print(f"Final training loss: {history.history['loss'][-1]:.4f}")
+        logging.info(f"Training completed after {final_epoch} epochs")
+        logging.info(f"Final training loss: {history.history['loss'][-1]:.4f}")
         if 'val_loss' in history.history:
-            print(f"Final validation loss: {history.history['val_loss'][-1]:.4f}")
+            logging.info(f"Final validation loss: {history.history['val_loss'][-1]:.4f}")
         
         return self.history
     
@@ -265,7 +266,7 @@ class KerasModel(BaseModel):
             raise RuntimeError("Model must be trained before saving.")
         
         self.model.save(filepath)
-        print(f"Keras model saved to {filepath}")
+        logging.info(f"Keras model saved to {filepath}")
     
     def load_model(self, filepath: str) -> None:
         """
@@ -278,7 +279,7 @@ class KerasModel(BaseModel):
         
         self.model = keras_load_model(filepath)
         self.is_trained = True
-        print(f"Keras model loaded from {filepath}")
+        logging.info(f"Keras model loaded from {filepath}")
     
     def get_training_history(self) -> Optional[Dict[str, List[float]]]:
         """
@@ -313,7 +314,7 @@ class KerasModel(BaseModel):
         Print a summary of the model architecture.
         """
         if self.model is None:
-            print("Model not built yet. Call build_model() first.")
+            logging.info("Model not built yet. Call build_model() first.")
         else:
             self.model.summary()
     

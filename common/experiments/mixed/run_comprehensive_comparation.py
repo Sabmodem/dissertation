@@ -25,6 +25,7 @@ from models.sklearn_model import SklearnModel
 from models.keras_model import KerasModel
 from models.hf_model import HuggingFaceModel
 from core.experiment import Experiment
+import logging
 
 
 def run_comprehensive_comparison(
@@ -39,11 +40,11 @@ def run_comprehensive_comparison(
         include_transformers: Whether to include transformer models (slower)
     """
     
-    print("="*80)
-    print("COMPREHENSIVE MODEL COMPARISON")
-    print("Comparing: Classical ML + Neural Networks" + 
+    logging.info("="*30)
+    logging.info("COMPREHENSIVE MODEL COMPARISON")
+    logging.info("Comparing: Classical ML + Neural Networks" + 
           (" + Transformers" if include_transformers else ""))
-    print("="*80)
+    logging.info("="*30)
     
     all_results = {}
     
@@ -51,9 +52,9 @@ def run_comprehensive_comparison(
     # PART 1: CLASSICAL ML MODELS (with TF-IDF)
     # =========================================================================
     
-    print("\n" + "="*80)
-    print("PART 1: CLASSICAL MACHINE LEARNING MODELS")
-    print("="*80)
+    logging.info("" + "="*30)
+    logging.info("PART 1: CLASSICAL MACHINE LEARNING MODELS")
+    logging.info("="*30)
     
     classical_models = {
         "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
@@ -62,9 +63,9 @@ def run_comprehensive_comparison(
     }
     
     for model_name, sklearn_estimator in classical_models.items():
-        print(f"\n{'-'*80}")
-        print(f"Training: {model_name}")
-        print(f"{'-'*80}")
+        logging.info(f"{'-'*30}")
+        logging.info(f"Training: {model_name}")
+        logging.info(f"{'-'*30}")
         
         # Create fresh components
         vectorizer = TfidfVectorizer(max_features=5000)
@@ -88,17 +89,17 @@ def run_comprehensive_comparison(
                 generate_plots=False  # Generate plots later
             )
             all_results[model_name] = results['test']
-            print(f"✓ {model_name} completed successfully")
+            logging.info(f"✓ {model_name} completed successfully")
         except Exception as e:
-            print(f"✗ {model_name} failed: {e}")
+            logging.info(f"✗ {model_name} failed: {e}")
     
     # =========================================================================
     # PART 2: NEURAL NETWORKS (with TF-IDF)
     # =========================================================================
     
-    print("\n" + "="*80)
-    print("PART 2: NEURAL NETWORKS")
-    print("="*80)
+    logging.info("" + "="*30)
+    logging.info("PART 2: NEURAL NETWORKS")
+    logging.info("="*30)
     
     nn_configs = {
         "NN_ReLU": {
@@ -123,9 +124,9 @@ def run_comprehensive_comparison(
     }
     
     for model_name, config in nn_configs.items():
-        print(f"\n{'-'*80}")
-        print(f"Training: {model_name}")
-        print(f"{'-'*80}")
+        logging.info(f"{'-'*30}")
+        logging.info(f"Training: {model_name}")
+        logging.info(f"{'-'*30}")
         
         # Create components
         vectorizer = TfidfVectorizer(max_features=5000)
@@ -154,18 +155,18 @@ def run_comprehensive_comparison(
                 generate_plots=False
             )
             all_results[model_name] = results['test']
-            print(f"✓ {model_name} completed successfully")
+            logging.info(f"✓ {model_name} completed successfully")
         except Exception as e:
-            print(f"✗ {model_name} failed: {e}")
+            logging.info(f"✗ {model_name} failed: {e}")
     
     # =========================================================================
     # PART 3: TRANSFORMERS (Optional - slower)
     # =========================================================================
     
     if include_transformers:
-        print("\n" + "="*80)
-        print("PART 3: TRANSFORMER MODELS")
-        print("="*80)
+        logging.info("" + "="*30)
+        logging.info("PART 3: TRANSFORMER MODELS")
+        logging.info("="*30)
         
         transformer_configs = {
             "GPT-2": {
@@ -176,9 +177,9 @@ def run_comprehensive_comparison(
         }
         
         for model_display_name, config in transformer_configs.items():
-            print(f"\n{'-'*80}")
-            print(f"Training: {model_display_name}")
-            print(f"{'-'*80}")
+            logging.info(f"{'-'*30}")
+            logging.info(f"Training: {model_display_name}")
+            logging.info(f"{'-'*30}")
             
             try:
                 # Create components
@@ -211,28 +212,28 @@ def run_comprehensive_comparison(
                     generate_plots=False
                 )
                 all_results[model_display_name] = results['test']
-                print(f"✓ {model_display_name} completed successfully")
+                logging.info(f"✓ {model_display_name} completed successfully")
             except Exception as e:
-                print(f"✗ {model_display_name} failed: {e}")
+                logging.info(f"✗ {model_display_name} failed: {e}")
     
     # =========================================================================
     # FINAL COMPARISON AND VISUALIZATION
     # =========================================================================
     
-    print("\n" + "="*80)
-    print("FINAL RESULTS")
-    print("="*80)
+    logging.info("" + "="*30)
+    logging.info("FINAL RESULTS")
+    logging.info("="*30)
     
     if not all_results:
-        print("No results to compare!")
+        logging.info("No results to compare!")
         return
     
     # Print comparison table
-    print(f"\n{'Model':<25} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
-    print("-" * 80)
+    logging.info(f"{'Model':<25} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
+    logging.info("-" * 80)
     
     for model_name, results in sorted(all_results.items(), key=lambda x: x[1]['f1'], reverse=True):
-        print(f"{model_name:<25} "
+        logging.info(f"{model_name:<25} "
               f"{results['accuracy']:<12.4f} "
               f"{results['precision']:<12.4f} "
               f"{results['recall']:<12.4f} "
@@ -240,12 +241,12 @@ def run_comprehensive_comparison(
     
     # Find best model
     best_model = max(all_results.items(), key=lambda x: x[1]['f1'])
-    print(f"\n{'='*80}")
-    print(f"🏆 BEST MODEL: {best_model[0]} (F1-Score: {best_model[1]['f1']:.4f})")
-    print(f"{'='*80}")
+    logging.info(f"{'='*30}")
+    logging.info(f"🏆 BEST MODEL: {best_model[0]} (F1-Score: {best_model[1]['f1']:.4f})")
+    logging.info(f"{'='*30}")
     
     # Generate comparison visualizations
-    print("\nGenerating comparison visualizations...")
+    logging.info("Generating comparison visualizations...")
     visualizer = Visualizer(save_dir="./plots/comprehensive_comparison")
     
     visualizer.compare_models_barplot(all_results, metric='accuracy', title='Accuracy Comparison')
@@ -254,20 +255,20 @@ def run_comprehensive_comparison(
     
     # Generate individual plots for top 3 models
     top_3_models = sorted(all_results.items(), key=lambda x: x[1]['f1'], reverse=True)[:3]
-    print(f"\nGenerating detailed plots for top 3 models...")
+    logging.info(f"Generating detailed plots for top 3 models...")
     for model_name, results in top_3_models:
         visualizer.plot_all(results, model_name=model_name)
     
-    print("\n" + "="*80)
-    print("COMPREHENSIVE COMPARISON COMPLETED!")
-    print("="*80)
-    print(f"\nTotal models compared: {len(all_results)}")
-    print(f"Plots saved to: ./plots/comprehensive_comparison/")
-    print(f"\nSummary:")
-    print(f"  - Classical ML models: {sum(1 for k in all_results if k in classical_models)}")
-    print(f"  - Neural Networks: {sum(1 for k in all_results if 'NN_' in k)}")
+    logging.info("" + "="*30)
+    logging.info("COMPREHENSIVE COMPARISON COMPLETED!")
+    logging.info("="*30)
+    logging.info(f"Total models compared: {len(all_results)}")
+    logging.info(f"Plots saved to: ./plots/comprehensive_comparison/")
+    logging.info(f"Summary:")
+    logging.info(f"  - Classical ML models: {sum(1 for k in all_results if k in classical_models)}")
+    logging.info(f"  - Neural Networks: {sum(1 for k in all_results if 'NN_' in k)}")
     if include_transformers:
-        print(f"  - Transformers: {sum(1 for k in all_results if k not in classical_models and 'NN_' not in k)}")
+        logging.info(f"  - Transformers: {sum(1 for k in all_results if k not in classical_models and 'NN_' not in k)}")
     
     return all_results
 
@@ -275,11 +276,11 @@ def run_comprehensive_comparison(
 if __name__ == "__main__":
     # Get data file
     try:
-        import structuring.common.config as config
+        import config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"
-        print(f"Warning: config.py not found, using default: {DATA_FILE}")
+        logging.info(f"Warning: config.py not found, using default: {DATA_FILE}")
     
     # Run comprehensive comparison
     # Set include_transformers=True to include transformer models (slower)

@@ -10,6 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 import sys
 import os
+import logging
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
@@ -23,14 +24,14 @@ def run_model_comparison():
     
     # Configuration
     try:
-        import structuring.common.config as config
+        import config as config
         DATA_FILE = config.DATA_FILE
     except ImportError:
         DATA_FILE = "fraud_data.csv"
     
-    print("="*70)
-    print("MULTI-MODEL COMPARISON EXPERIMENT")
-    print("="*70)
+    logging.info("="*30)
+    logging.info("MULTI-MODEL COMPARISON EXPERIMENT")
+    logging.info("="*30)
     
     # Define models to compare
     models_config = {
@@ -54,9 +55,9 @@ def run_model_comparison():
     
     # Run experiment for each model
     for model_name, sklearn_estimator in models_config.items():
-        print(f"\n{'='*70}")
-        print(f"Running experiment: {model_name}")
-        print(f"{'='*70}")
+        logging.info(f"{'='*30}")
+        logging.info(f"Running experiment: {model_name}")
+        logging.info(f"{'='*30}")
         
         # Create fresh data loader for each model (to ensure independence)
         data_loader = DataLoader(
@@ -90,25 +91,25 @@ def run_model_comparison():
         test_results_for_comparison[model_name] = results['test']
     
     # Compare models
-    print(f"\n{'='*70}")
-    print("MODEL COMPARISON SUMMARY")
-    print(f"{'='*70}\n")
+    logging.info(f"{'='*30}")
+    logging.info("MODEL COMPARISON SUMMARY")
+    logging.info(f"{'='*30}")
     
     # Print comparison table
-    print(f"{'Model':<20} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1':<12}")
-    print("-" * 70)
+    logging.info(f"{'Model':<20} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1':<12}")
+    logging.info("-" * 70)
     
     for model_name, results in test_results_for_comparison.items():
-        print(f"{model_name:<20} "
+        logging.info(f"{model_name:<20} "
               f"{results['accuracy']:<12.4f} "
               f"{results['precision']:<12.4f} "
               f"{results['recall']:<12.4f} "
               f"{results['f1']:<12.4f}")
     
     # Generate comparison visualizations
-    print(f"\n{'='*70}")
-    print("GENERATING COMPARISON VISUALIZATIONS")
-    print(f"{'='*70}\n")
+    logging.info(f"{'='*30}")
+    logging.info("GENERATING COMPARISON VISUALIZATIONS")
+    logging.info(f"{'='*30}")
     
     # Bar chart comparison
     visualizer.compare_models_barplot(
@@ -135,7 +136,7 @@ def run_model_comparison():
         for j in range(i + 1, len(model_names)):
             model1 = model_names[i]
             model2 = model_names[j]
-            print(f"\nComparing {model1} vs {model2}:")
+            logging.info(f"Comparing {model1} vs {model2}:")
             evaluator.compare_metrics(
                 test_results_for_comparison[model1],
                 test_results_for_comparison[model2],
@@ -143,10 +144,10 @@ def run_model_comparison():
                 model2_name=model2
             )
     
-    print(f"\n{'='*70}")
-    print("COMPARISON COMPLETED!")
-    print(f"{'='*70}")
-    print(f"\nAll plots saved to: {visualizer.save_dir}")
+    logging.info(f"{'='*30}")
+    logging.info("COMPARISON COMPLETED!")
+    logging.info(f"{'='*30}")
+    logging.info(f"All plots saved to: {visualizer.save_dir}")
     
     return all_results
 

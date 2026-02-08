@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import numpy as np
 from sklearn.metrics import (
     accuracy_score,
@@ -10,7 +10,7 @@ from sklearn.metrics import (
     auc,
     precision_recall_curve
 )
-
+import logging
 
 class Evaluator:
     """
@@ -146,23 +146,23 @@ class Evaluator:
             metrics: Dictionary of metrics from evaluate()
         """
         dataset = metrics.get('dataset', 'unknown')
-        print(f"\n{'='*50}")
-        print(f"{dataset.upper()} SET RESULTS")
-        print(f"{'='*50}")
-        print(f"Accuracy:  {metrics['accuracy']:.4f}")
-        print(f"Precision: {metrics['precision']:.4f}")
-        print(f"Recall:    {metrics['recall']:.4f}")
-        print(f"F1-score:  {metrics['f1']:.4f}")
+        logging.info(f"{'='*30}")
+        logging.info(f"{dataset.upper()} SET RESULTS")
+        logging.info(f"{'='*30}")
+        logging.info(f"Accuracy:  {metrics['accuracy']:.4f}")
+        logging.info(f"Precision: {metrics['precision']:.4f}")
+        logging.info(f"Recall:    {metrics['recall']:.4f}")
+        logging.info(f"F1-score:  {metrics['f1']:.4f}")
         
         if metrics.get('roc_curve') is not None:
-            print(f"ROC AUC:   {metrics['roc_curve']['auc']:.4f}")
+            logging.info(f"ROC AUC:   {metrics['roc_curve']['auc']:.4f}")
         
         # Print confusion matrix
         if metrics.get('tp') is not None:
-            print(f"\nConfusion Matrix:")
-            print(f"  TN: {metrics['tn']}, FP: {metrics['fp']}")
-            print(f"  FN: {metrics['fn']}, TP: {metrics['tp']}")
-        print(f"{'='*50}\n")
+            logging.info(f"Confusion Matrix:")
+            logging.info(f"  TN: {metrics['tn']}, FP: {metrics['fp']}")
+            logging.info(f"  FN: {metrics['fn']}, TP: {metrics['tp']}")
+        logging.info(f"{'='*30}")
     
     def print_all_metrics(self, results: Dict[str, Dict[str, Any]]) -> None:
         """
@@ -190,27 +190,27 @@ class Evaluator:
             model1_name: Name of first model (for display)
             model2_name: Name of second model (for display)
         """
-        print(f"\n{'='*60}")
-        print(f"MODEL COMPARISON: {model1_name} vs {model2_name}")
-        print(f"{'='*60}")
-        print(f"{'Metric':<15} {model1_name:<20} {model2_name:<20}")
-        print(f"{'-'*60}")
+        logging.info(f"{'='*30}")
+        logging.info(f"MODEL COMPARISON: {model1_name} vs {model2_name}")
+        logging.info(f"{'='*30}")
+        logging.info(f"{'Metric':<15} {model1_name:<20} {model2_name:<20}")
+        logging.info(f"{'-'*30}")
         
         for metric in ['accuracy', 'precision', 'recall', 'f1']:
             val1 = results1[metric]
             val2 = results2[metric]
             diff = val2 - val1
             diff_symbol = "↑" if diff > 0 else "↓" if diff < 0 else "="
-            print(f"{metric.capitalize():<15} {val1:.4f}               {val2:.4f}  {diff_symbol} ({diff:+.4f})")
+            logging.info(f"{metric.capitalize():<15} {val1:.4f}               {val2:.4f}  {diff_symbol} ({diff:+.4f})")
         
         if results1.get('roc_curve') and results2.get('roc_curve'):
             auc1 = results1['roc_curve']['auc']
             auc2 = results2['roc_curve']['auc']
             diff = auc2 - auc1
             diff_symbol = "↑" if diff > 0 else "↓" if diff < 0 else "="
-            print(f"{'ROC AUC':<15} {auc1:.4f}               {auc2:.4f}  {diff_symbol} ({diff:+.4f})")
+            logging.info(f"{'ROC AUC':<15} {auc1:.4f}               {auc2:.4f}  {diff_symbol} ({diff:+.4f})")
         
-        print(f"{'='*60}\n")
+        logging.info(f"{'='*30}")
     
     def get_summary(self, metrics: Dict[str, Any]) -> Dict[str, float]:
         """

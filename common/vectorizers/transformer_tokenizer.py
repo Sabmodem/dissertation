@@ -8,6 +8,7 @@ from core.base_vectorizer import BaseVectorizer
 
 from transformers import AutoTokenizer
 import torch
+import logging
 
 
 class TransformerTokenizer(BaseVectorizer):
@@ -59,12 +60,12 @@ class TransformerTokenizer(BaseVectorizer):
         self.tokenizer_kwargs = kwargs
         
         # Initialize tokenizer
-        print(f"Loading tokenizer: {model_name}")
+        logging.info(f"Loading tokenizer: {model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         
         # Handle special tokens (some models don't have pad tokens)
         if self.tokenizer.pad_token is None:
-            print(f"Adding pad token to {model_name} tokenizer")
+            logging.info(f"Adding pad token to {model_name} tokenizer")
             self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         
         self.vocab_size = len(self.tokenizer)
@@ -84,7 +85,7 @@ class TransformerTokenizer(BaseVectorizer):
         """
         # Pretrained tokenizers don't need fitting
         self.is_fitted = True
-        print(f"Tokenizer ready (pretrained, no fitting needed)")
+        logging.info(f"Tokenizer ready (pretrained, no fitting needed)")
         return self
     
     def transform(self, texts: Union[List[str], pd.Series]) -> np.ndarray:
@@ -253,7 +254,7 @@ class TransformerTokenizer(BaseVectorizer):
             new_size: New vocabulary size
         """
         self.vocab_size = new_size
-        print(f"Vocabulary size updated to {new_size}")
+        logging.info(f"Vocabulary size updated to {new_size}")
     
     def __repr__(self) -> str:
         """String representation of the tokenizer."""

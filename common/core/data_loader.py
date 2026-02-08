@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from core import BaseVectorizer
+import logging
 
 class DataLoader:
     """
@@ -71,7 +72,7 @@ class DataLoader:
         """
         self.df = pd.read_csv(filepath)
         self.is_loaded = True
-        print(f"Loaded dataset with {len(self.df)} samples")
+        logging.info(f"Loaded dataset with {len(self.df)} samples")
         return self
     
     def split_data(self) -> 'DataLoader':
@@ -101,7 +102,7 @@ class DataLoader:
             random_state=self.random_state
         )
         
-        print(f"Split data - Train: {len(self.train_df)}, "
+        logging.info(f"Split data - Train: {len(self.train_df)}, "
               f"Val: {len(self.val_df)}, Test: {len(self.test_df)}")
         
         return self
@@ -131,7 +132,7 @@ class DataLoader:
         )
         
         # Vectorize text
-        print("Vectorizing text data...")
+        logging.info("Vectorizing text data...")
         self.X_train = self.vectorizer.fit_transform(
             self.train_df[self.text_column]
         )
@@ -142,7 +143,7 @@ class DataLoader:
             self.test_df[self.text_column]
         )
         
-        print(f"Preprocessing complete. Feature dimension: {self.X_train.shape[1]}")
+        logging.info(f"Preprocessing complete. Feature dimension: {self.X_train.shape[1]}")
         
         return self
     

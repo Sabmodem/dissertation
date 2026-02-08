@@ -11,7 +11,9 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from vectorizers.transformer_tokenizer import TransformerTokenizer
 from models.hf_model import HuggingFaceModel
-from structuring.common.utils import make_experiment
+import utils
+
+utils.setup_logging()   
 
 def main():
     """Run FinBERT model experiment (specialized for financial text)."""
@@ -33,4 +35,7 @@ def main():
         truncation=True
     )
 
-    return make_experiment('FinBERT', model, tokenizer)
+    return utils.make_experiment('FinBERT', model, tokenizer)
+
+if __name__ == "__main__":
+    main()

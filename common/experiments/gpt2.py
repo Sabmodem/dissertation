@@ -11,7 +11,9 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from vectorizers.transformer_tokenizer import TransformerTokenizer
 from models.hf_model import HuggingFaceModel
-from structuring.common.utils import make_experiment
+import utils
+
+utils.setup_logging()
 
 def main():
     """Run GPT-2 model experiment."""
@@ -31,4 +33,7 @@ def main():
         output_dir='./results/gpt2',
         logging_dir='./logs/gpt2'
     )
-    return make_experiment('GPT2', model, tokenizer)
+    return utils.make_experiment('GPT2', model, tokenizer)
+
+if __name__ == '__main__':
+    main()

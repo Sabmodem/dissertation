@@ -6,6 +6,7 @@ from core.base_model import BaseModel
 from core.data_loader import DataLoader
 from core.evaluator import Evaluator
 from core.visualizer import Visualizer
+import logging
 
 
 class Experiment:
@@ -65,28 +66,28 @@ class Experiment:
         Returns:
             Dictionary of evaluation results for each dataset
         """
-        print(f"\n{'='*60}")
-        print(f"EXPERIMENT: {self.name}")
-        print(f"{'='*60}\n")
+        logging.info(f"{'='*30}")
+        logging.info(f"EXPERIMENT: {self.name}")
+        logging.info(f"{'='*30}")
         
         # Step 1: Load and prepare data
-        print("Step 1: Loading and preparing data...")
+        logging.info("Step 1: Loading and preparing data...")
         self.data_loader.load_data(data_file).split_data().preprocess()
         
         # Step 2: Get data for training
-        print("\nStep 2: Preparing training data...")
+        logging.info("Step 2: Preparing training data...")
         X_train, y_train = self.data_loader.get_train_data()
         X_val, y_val = self.data_loader.get_val_data()
         
         # Step 3: Train model (build happens automatically inside train())
-        print("\nStep 3: Training model...")
+        logging.info("Step 3: Training model...")
         self.training_history = self.model.train(X_train, y_train, X_val, y_val)
         
         # Step 4: Evaluate model
-        print("\nStep 4: Evaluating model...")
+        logging.info("Step 4: Evaluating model...")
         
         if evaluate_on_train:
-            print("\nEvaluating on training set...")
+            logging.info("Evaluating on training set...")
             train_results = self.evaluator.evaluate(
                 self.model, X_train, y_train, dataset_name="train"
             )
@@ -94,7 +95,7 @@ class Experiment:
             self.evaluator.print_metrics(train_results)
         
         if evaluate_on_val:
-            print("\nEvaluating on validation set...")
+            logging.info("Evaluating on validation set...")
             val_results = self.evaluator.evaluate(
                 self.model, X_val, y_val, dataset_name="validation"
             )
@@ -102,7 +103,7 @@ class Experiment:
             self.evaluator.print_metrics(val_results)
         
         if evaluate_on_test:
-            print("\nEvaluating on test set...")
+            logging.info("Evaluating on test set...")
             X_test, y_test = self.data_loader.get_test_data()
             test_results = self.evaluator.evaluate(
                 self.model, X_test, y_test, dataset_name="test"
@@ -112,7 +113,7 @@ class Experiment:
         
         # Step 5: Generate visualizations
         if generate_plots:
-            print("\nStep 5: Generating visualizations...")
+            logging.info("Step 5: Generating visualizations...")
             for dataset_name, metrics in self.results.items():
                 self.visualizer.plot_all(metrics, model_name=f"{self.name}_{dataset_name}")
             
@@ -123,9 +124,9 @@ class Experiment:
                     model_name=self.name
                 )
         
-        print(f"\n{'='*60}")
-        print(f"EXPERIMENT COMPLETE: {self.name}")
-        print(f"{'='*60}\n")
+        logging.info(f"{'='*30}")
+        logging.info(f"EXPERIMENT COMPLETE: {self.name}")
+        logging.info(f"{'='*30}")
         
         return self.results
     
@@ -139,9 +140,9 @@ class Experiment:
         Returns:
             Training history dictionary
         """
-        print(f"\n{'='*60}")
-        print(f"TRAINING ONLY: {self.name}")
-        print(f"{'='*60}\n")
+        logging.info(f"{'='*30}")
+        logging.info(f"TRAINING ONLY: {self.name}")
+        logging.info(f"{'='*30}")
         
         # Load and prepare data
         self.data_loader.load_data(data_file).split_data().preprocess()
@@ -152,7 +153,7 @@ class Experiment:
         
         self.training_history = self.model.train(X_train, y_train, X_val, y_val)
         
-        print(f"\nTraining complete for {self.name}\n")
+        logging.info(f"Training complete for {self.name}")
         return self.training_history
     
     def run_evaluation_only(
@@ -175,9 +176,9 @@ class Experiment:
         if not self.model.is_trained:
             raise RuntimeError("Model must be trained before evaluation. Call run_training_only() first.")
         
-        print(f"\n{'='*60}")
-        print(f"EVALUATION ONLY: {self.name} on {dataset_name}")
-        print(f"{'='*60}\n")
+        logging.info(f"{'='*30}")
+        logging.info(f"EVALUATION ONLY: {self.name} on {dataset_name}")
+        logging.info(f"{'='*30}")
         
         # Get appropriate data
         if dataset_name == "train":
@@ -199,7 +200,7 @@ class Experiment:
         if generate_plots:
             self.visualizer.plot_all(results, model_name=f"{self.name}_{dataset_name}")
         
-        print(f"\nEvaluation complete for {self.name} on {dataset_name}\n")
+        logging.info(f"Evaluation complete for {self.name} on {dataset_name}")
         return results
     
     def evaluate_on_external_dataset(
@@ -222,9 +223,9 @@ class Experiment:
         if not self.model.is_trained:
             raise RuntimeError("Model must be trained before evaluation.")
         
-        print(f"\n{'='*60}")
-        print(f"EXTERNAL EVALUATION: {self.name} on {dataset_name}")
-        print(f"{'='*60}\n")
+        logging.info(f"{'='*30}")
+        logging.info(f"EXTERNAL EVALUATION: {self.name} on {dataset_name}")
+        logging.info(f"{'='*30}")
         
         # Load and transform external data using fitted vectorizer
         X_external, y_external = self.data_loader.load_and_transform_external(data_file)
@@ -241,7 +242,7 @@ class Experiment:
         if generate_plots:
             self.visualizer.plot_all(results, model_name=f"{self.name}_{dataset_name}")
         
-        print(f"\nExternal evaluation complete for {self.name}\n")
+        logging.info(f"External evaluation complete for {self.name}")
         return results
     
     def get_results_summary(self) -> Dict[str, Dict[str, float]]:

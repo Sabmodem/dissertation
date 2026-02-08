@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, PrecisionRecallDisplay
 import os
+import logging
 
 
 class Visualizer:
@@ -81,7 +82,7 @@ class Visualizer:
             model_name: Name of the model (for title and filename)
         """
         if metrics.get('roc_curve') is None:
-            print(f"Warning: No ROC curve data available for {model_name}")
+            logging.warning(f"Warning: No ROC curve data available for {model_name}")
             return
         
         roc_data = metrics['roc_curve']
@@ -114,7 +115,7 @@ class Visualizer:
             model_name: Name of the model (for title and filename)
         """
         if metrics.get('pr_curve') is None:
-            print(f"Warning: No PR curve data available for {model_name}")
+            logging.warning(f"Warning: No PR curve data available for {model_name}")
             return
         
         pr_data = metrics['pr_curve']
@@ -144,13 +145,13 @@ class Visualizer:
             model_name: Name of the model (for titles and filenames)
             class_names: Names of classes for confusion matrix
         """
-        print(f"Generating plots for {model_name}...")
+        logging.info(f"Generating plots for {model_name}...")
         
         self.plot_confusion_matrix(metrics, model_name, class_names)
         self.plot_roc_curve(metrics, model_name)
         self.plot_precision_recall_curve(metrics, model_name)
         
-        print(f"Plots generated for {model_name}")
+        logging.info(f"Plots generated for {model_name}")
     
     def plot_training_history(
         self,
@@ -172,7 +173,7 @@ class Visualizer:
         available_metrics = [m for m in metrics if m in history or f'val_{m}' in history]
         
         if not available_metrics:
-            print(f"Warning: No training history data available for {model_name}")
+            logging.warning(f"Warning: No training history data available for {model_name}")
             return
         
         n_metrics = len(available_metrics)
@@ -280,7 +281,7 @@ class Visualizer:
         if self.save_plots:
             filepath = os.path.join(self.save_dir, f'{filename}.png')
             fig.savefig(filepath, dpi=self.dpi, bbox_inches='tight')
-            print(f"Saved plot: {filepath}")
+            logging.info(f"Saved plot: {filepath}")
         
         if self.show_plots:
             plt.show()

@@ -1,7 +1,7 @@
 from infrastructure.xboost import *
 import pandas as pd
 from infrastructure.helpers import create_logger
-import structuring.common.config as config
+import config as config
 
 data_step_config = XBoostDataStepConfig(
     train_temp_split_config=dict(test_size=0.4, random_state=62),

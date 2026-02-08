@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.base_model import BaseModel
+import logging
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -107,7 +108,7 @@ class HuggingFaceModel(BaseModel):
         """
         Build the HuggingFace transformer model.
         """
-        print(f"Loading model: {self.model_name}")
+        logging.info(f"Loading model: {self.model_name}")
         
         # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -126,8 +127,8 @@ class HuggingFaceModel(BaseModel):
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.model.config.pad_token_id = self.tokenizer.pad_token_id
         
-        print(f"Model loaded successfully: {self.model_name}")
-        print(f"  Number of parameters: {sum(p.numel() for p in self.model.parameters()):,}")
+        logging.info(f"Model loaded successfully: {self.model_name}")
+        logging.info(f"  Number of parameters: {sum(p.numel() for p in self.model.parameters()):,}")
     
     def train(
         self,
@@ -153,7 +154,7 @@ class HuggingFaceModel(BaseModel):
         if self.model is None:
             self.build_model()
         
-        print(f"Training {self.model_name} for {self.num_epochs} epochs...")
+        logging.info(f"Training {self.model_name} for {self.num_epochs} epochs...")
         
         # Create datasets
         train_dataset = HFDataset(X_train, y_train)
@@ -193,15 +194,15 @@ class HuggingFaceModel(BaseModel):
         self.training_results = train_result
         
         # Get final metrics
-        print(f"\nTraining completed!")
-        print(f"Training loss: {train_result.training_loss:.4f}")
+        logging.info(f"Training completed!")
+        logging.info(f"Training loss: {train_result.training_loss:.4f}")
         
         # Evaluate on validation set if provided
         if val_dataset is not None:
             val_results = self.trainer.evaluate(eval_dataset=val_dataset)
-            print(f"\nValidation Results:")
+            logging.info(f"Validation Results:")
             for key, value in val_results.items():
-                print(f"  {key}: {value:.4f}")
+                logging.info(f"  {key}: {value:.4f}")
             
             return {
                 'train': train_result.metrics,
@@ -269,7 +270,7 @@ class HuggingFaceModel(BaseModel):
         
         self.model.save_pretrained(filepath)
         self.tokenizer.save_pretrained(filepath)
-        print(f"HuggingFace model saved to {filepath}")
+        logging.info(f"HuggingFace model saved to {filepath}")
     
     def load_model(self, filepath: str) -> None:
         """
@@ -281,7 +282,7 @@ class HuggingFaceModel(BaseModel):
         self.model = AutoModelForSequenceClassification.from_pretrained(filepath)
         self.tokenizer = AutoTokenizer.from_pretrained(filepath)
         self.is_trained = True
-        print(f"HuggingFace model loaded from {filepath}")
+        logging.info(f"HuggingFace model loaded from {filepath}")
     
     def _compute_metrics(self, eval_pred):
         """
