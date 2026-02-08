@@ -1,7 +1,5 @@
 """
 Configuration file for fraud detection experiments.
-
-Modify this file to point to your dataset and configure experiment settings.
 """
 from datetime import datetime
 
@@ -33,6 +31,6 @@ SAVE_MODELS = True  # Whether to save models to disk
 SAVE_SUMMARY = True  # Whether to save model summary to disk
 
 # Label encoding
-# If your labels are 'yes'/'no', they'll be automatically encoded to 1/0
+# If labels are 'yes'/'no', they'll be automatically encoded to 1/0
 # If they're already numeric, no encoding is needed
 POS_LABEL = 1  # The label value for the positive class (fraud)
