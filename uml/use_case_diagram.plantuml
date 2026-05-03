@@ -1,0 +1,29 @@
+@startuml
+!theme plain
+left to right direction
+
+actor "Пользователь" as User
+
+rectangle "Фреймворк обнаружения мошенничества на бирже" {
+  usecase "Подготовить данные" as UC_Prepare
+  usecase "Обработать данные\n(применить модель/правила)" as UC_Process
+  usecase "Интерпретировать\nрезультаты" as UC_Interpret
+  usecase "Обучить модель" as UC_Train
+}
+
+User --> UC_Prepare
+User --> UC_Process
+User --> UC_Interpret
+User --> UC_Train
+
+note top of UC_Process
+  Использует результат
+  «Подготовить данные»
+  и артефакт «Обучить модель»
+end note
+
+note bottom of UC_Train
+  Производит обученную модель,
+  применяемую в «Обработать данные»
+end note
+@enduml
