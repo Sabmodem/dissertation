@@ -13,6 +13,7 @@ abstract class ProcessorInput <<DTO>> {
 abstract class ProcessorOutput <<DTO>> {
 }
 
+' todo: it should be a file, not a class
 class ModelArtifact <<entity>> {
 }
 note right of ModelArtifact : Артефакт создается\nв процессе тренировки
