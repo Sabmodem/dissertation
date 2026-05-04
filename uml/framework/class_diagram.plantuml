@@ -1,0 +1,70 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam abstractClassBackgroundColor Lavender
+
+' ========= Контракты данных (Extension Points) =========
+abstract class ProcessorInput <<DTO>> {
+}
+
+abstract class ProcessorOutput <<DTO>> {
+}
+
+class ModelArtifact <<entity>> {
+}
+note right of ModelArtifact : Артефакт создается\nв процессе тренировки
+
+' ========= Интерфейсы этапов =========
+interface Preparator {
+  + prepare(rawData: RawData) : ProcessorInput
+}
+
+interface Processor {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter {
+  + interpret(output: ProcessorOutput) : InterpreterOutput
+}
+
+interface Trainer {
+  + train(input: ProcessorInput) : ModelArtifact
+}
+
+' ========= Класс-дирижёр пайплайна =========
+class Pipeline {
+  - preparator: Preparator
+  - processor: Processor
+  - interpreter: Interpreter
+  ..
+  + run(rawData: Any) : void
+  + setPreparator(Preparator) : void
+  + setProcessor(Processor) : void
+  + setInterpreter(Interpreter) : void
+}
+
+' ========= Связи =========
+Pipeline *-- Preparator
+Pipeline *-- Processor
+Pipeline *-- Interpreter
+
+Preparator ..> ProcessorInput : <<creates>>
+Processor ..> ProcessorInput : <<uses>>
+Processor ..> ProcessorOutput : <<creates>>
+Interpreter ..> ProcessorOutput : <<uses>>
+
+Trainer ..> ProcessorInput : <<uses>>
+Trainer ..> ModelArtifact : <<creates>>
+Processor ..> ModelArtifact : <<uses>>
+
+' Показываем, что ModelArtifact — это тоже расширяемый класс
+note top of ProcessorInput
+  <b>Точки расширения фреймворка</b>
+  Пользователь <b>обязан</b> унаследовать
+  ProcessorInput и ProcessorOutput
+end note
+
+@enduml
