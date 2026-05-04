@@ -1,0 +1,154 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+
+' ========= Контракты данных =========
+class FraudDetectionInput <<data contract>> {
+  + features: ndarray
+  + metadata: Map<String, Object>
+  + sample_ids: List<String>
+  + label: Optional[ndarray]
+  + raw: Optional<Object>
+}
+
+class FraudDetectionOutput <<data contract>> {
+  + sample_ids: List<String>
+  + predictions: ndarray
+  + probabilities: ndarray
+  + explanations: Optional<Object>
+}
+
+class ModelArtifact <<artifact>> {
+  + model_path: String
+  + metadata: Map<String, Object>
+}
+
+' ========= Интерфейсы этапов =========
+interface IPreparator {
+  + prepare(rawData: Any) : FraudDetectionInput
+}
+
+interface IProcessor {
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+}
+
+interface IInterpreter {
+  + interpret(output: FraudDetectionOutput) : void
+}
+
+interface ITrainer {
+  + train(input: FraudDetectionInput) : ModelArtifact
+}
+
+' ========= Класс-дирижёр пайплайна =========
+class Pipeline {
+  - preparator: IPreparator
+  - processor: IProcessor
+  - interpreter: IInterpreter
+  + run(rawData: Any) : void
+  + setPreparator(IPreparator) : void
+  + setProcessor(IProcessor) : void
+  + setInterpreter(IInterpreter) : void
+}
+
+' ========= Существующие абстракции (из кода) =========
+abstract class BaseVectorizer {
+  + fit(texts) : BaseVectorizer
+  + transform(texts) : ndarray
+  + is_fitted : bool
+}
+
+abstract class BaseModel {
+  + train(X, y) : Dict
+  + predict(X) : ndarray
+  + predict_proba(X) : ndarray
+  + is_trained : bool
+}
+
+class Evaluator {
+  + evaluate(model, X, y) : Dict
+  + print_metrics(metrics) : void
+}
+
+class Visualizer {
+  + plot_confusion_matrix(metrics) : void
+  + plot_roc_curve(metrics) : void
+  + plot_precision_recall_curve(metrics) : void
+}
+
+' ========= Конкретные реализации =========
+' --- Подготовка ---
+class TfidfPreparator extends BaseVectorizer implements IPreparator {
+  - max_features: int
+  + prepare(rawData: Any) : FraudDetectionInput
+}
+class TransformerPreparator extends BaseVectorizer implements IPreparator {
+  - model_name: String
+  - max_length: int
+  + prepare(rawData: Any) : FraudDetectionInput
+}
+
+' --- Обработка ---
+class SklearnProcessor implements IProcessor {
+  - model: BaseModel
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+}
+class KerasProcessor implements IProcessor {
+  - model: BaseModel
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+}
+class RuleBasedProcessor implements IProcessor {
+  - rules: List<Rule>
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+}
+
+' --- Интерпретация ---
+class EvaluatorInterpreter implements IInterpreter {
+  - evaluator: Evaluator
+  - visualizer: Visualizer
+  + interpret(output: FraudDetectionOutput) : void
+}
+
+' --- Обучение ---
+class SklearnTrainer implements ITrainer {
+  - model: BaseModel
+  + train(input: FraudDetectionInput) : ModelArtifact
+}
+class KerasTrainer implements ITrainer {
+  - model: BaseModel
+  + train(input: FraudDetectionInput) : ModelArtifact
+}
+
+' ========= Связи =========
+Pipeline --> IPreparator
+Pipeline --> IProcessor
+Pipeline --> IInterpreter
+
+IPreparator ..> FraudDetectionInput : <<creates>>
+IProcessor ..> FraudDetectionInput : <<uses>>
+IProcessor ..> FraudDetectionOutput : <<creates>>
+IInterpreter ..> FraudDetectionOutput : <<uses>>
+ITrainer ..> FraudDetectionInput : <<uses>>
+ITrainer ..> ModelArtifact : <<creates>>
+IProcessor ..> ModelArtifact : <<uses>>
+
+TfidfPreparator .up.|> IPreparator
+TransformerPreparator .up.|> IPreparator
+SklearnProcessor .up.|> IProcessor
+KerasProcessor .up.|> IProcessor
+RuleBasedProcessor .up.|> IProcessor
+EvaluatorInterpreter .up.|> IInterpreter
+SklearnTrainer .up.|> ITrainer
+KerasTrainer .up.|> ITrainer
+
+BaseVectorizer <|-- TfidfPreparator
+BaseVectorizer <|-- TransformerPreparator
+BaseModel <.. SklearnProcessor : <<uses>>
+BaseModel <.. KerasProcessor : <<uses>>
+EvaluatorInterpreter o-- Evaluator
+EvaluatorInterpreter o-- Visualizer
+
+@enduml
