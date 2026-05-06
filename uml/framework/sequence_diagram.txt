@@ -1,0 +1,80 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+title ML Pipeline Framework — Sequence Diagrams
+
+' ========= Train Pipeline =========
+== TrainPipeline: Обучение модели ==
+
+actor "ML Developer" as Dev
+participant "TrainPipeline" as Train
+participant "Preparator" as Prep
+participant "Trainer" as Trainer
+collections "Файловая\nсистема" as FS
+
+Dev -> Train : run(rawData)
+activate Train
+
+Train -> Prep : prepare(rawData)
+activate Prep
+Prep --> Train : ProcessorInput
+deactivate Prep
+
+Train -> Trainer : train(ProcessorInput)
+activate Trainer
+Trainer -> Trainer : обучение модели
+Trainer -> FS : сохраняет модель в файл\n(pickle/H5/ONNX/...)
+deactivate Trainer
+
+Train --> Dev : void
+deactivate Train
+
+note right of FS
+  Модель сохранена.
+  Фреймворк не управляет
+  форматом и путём.
+end note
+
+' ========= Inference Pipeline =========
+== InferencePipeline: Применение модели ==
+
+actor "ML Developer" as Dev2
+participant "InferencePipeline" as Inf
+participant "Preparator" as Prep2
+participant "Processor" as Proc
+participant "Interpreter" as Interp
+collections "Файловая\nсистема" as FS2
+
+Dev2 -> Inf : run(rawData)
+activate Inf
+
+Inf -> Prep2 : prepare(rawData)
+activate Prep2
+Prep2 --> Inf : ProcessorInput
+deactivate Prep2
+
+Inf -> Proc : process(ProcessorInput)
+activate Proc
+Proc -> FS2 : загружает модель из файла
+Proc -> Proc : инференс
+Proc --> Inf : ProcessorOutput
+deactivate Proc
+
+Inf -> Interp : interpret(ProcessorOutput)
+activate Interp
+Interp -> Interp : постобработка\n(графики, БД, алерты...)
+Interp --> Inf : Any
+deactivate Interp
+
+Inf --> Dev2 : Any
+deactivate Inf
+
+note right of FS2
+  Модель загружается
+  из того же файла,
+  что сохранил Trainer.
+end note
+@enduml

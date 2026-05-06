@@ -1,0 +1,103 @@
+@startuml
+!theme plain
+skinparam activityBackgroundColor LightYellow
+skinparam activityBorderColor DarkSlateGray
+skinparam activityDiamondBackgroundColor LightCyan
+
+title ML Pipeline Framework — Activity Diagram
+
+start
+
+:Разработчик выбирает сценарий;
+
+if (Сценарий?) then (<b>Обучение</b>)
+  :Создать TrainPipeline;
+  
+  :Реализовать Preparator;
+  :Реализовать Trainer;
+  
+  :Сконфигурировать TrainPipeline\n(setPreparator, setTrainer);
+  
+  :Вызвать run(rawData);
+  
+  :Preparator.prepare(rawData)\nПреобразование сырых данных;
+  
+  note right
+    Возвращает ProcessorInput —
+    пользовательский DTO
+  end note
+  
+  :Trainer.train(ProcessorInput);
+  
+  :Обучение модели;
+  
+  :Сохранение модели в файл\n(pickle, H5, ONNX, ...);
+  
+  note right
+    Фреймворк не управляет
+    форматом и путём сохранения.
+    Вся логика внутри Trainer.
+  end note
+  
+  :Пайплайн завершён;
+  
+  note right
+    Результат: файл модели на диске.
+    run() возвращает void.
+  end note
+
+else (<b>Инференс</b>)
+  :Создать InferencePipeline;
+  
+  :Реализовать Preparator;
+  :Реализовать Processor;
+  :Реализовать Interpreter;
+  
+  :Сконфигурировать InferencePipeline\n(setPreparator, setProcessor, setInterpreter);
+  
+  :Вызвать run(rawData);
+  
+  :Preparator.prepare(rawData)\nПреобразование сырых данных;
+  
+  note right
+    Возвращает ProcessorInput —
+    пользовательский DTO
+  end note
+  
+  :Processor.process(ProcessorInput);
+  
+  :Загрузка модели из файла;
+  
+  :Инференс (predict);
+  
+  note right
+    Возвращает ProcessorOutput —
+    пользовательский DTO.
+    Модель загружается внутри
+    Processor.process().
+  end note
+  
+  :Interpreter.interpret(ProcessorOutput);
+  
+  :Постобработка результатов;
+  
+  note right
+    Произвольная логика:
+    • Визуализация (графики)
+    • Запись в БД
+    • Отправка алертов
+    • Логирование метрик
+  end note
+  
+  :Пайплайн завершён;
+  
+  note right
+    Результат: произвольный вывод
+    Interpreter'а.
+    run() возвращает Any.
+  end note
+
+endif
+
+stop
+@enduml

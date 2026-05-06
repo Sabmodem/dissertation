@@ -1,0 +1,103 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+title ML Pipeline Framework — Component Diagram
+
+' ========= Пакеты =========
+package "Framework Core" as Core {
+  
+  package "Contracts (DTO)" as DTO {
+    component "ProcessorInput" as PI <<abstract>>
+    component "ProcessorOutput" as PO <<abstract>>
+  }
+  
+  package "Interfaces" as Interfaces {
+    interface "Preparator" as PrepI
+    interface "Processor" as ProcI
+    interface "Interpreter" as InterpI
+    interface "Trainer" as TrainI
+  }
+  
+  package "Pipelines" as Pipelines {
+    component "TrainPipeline" as TrainP
+    component "InferencePipeline" as InfP
+  }
+}
+
+package "User Implementation" as User {
+  component "MyPreparator" as MyPrep
+  component "MyProcessor" as MyProc
+  component "MyInterpreter" as MyInterp
+  component "MyTrainer" as MyTrain
+  component "MyInput extends\nProcessorInput" as MyPI
+  component "MyOutput extends\nProcessorOutput" as MyPO
+}
+
+package "External" as Ext {
+  component "Raw Data\n(CSV, JSON, Images...)" as Raw
+  component "File System\n(model.pkl, model.h5...)" as FS
+  database "External Systems\n(DB, APIs, Alerts)" as ExtSys
+}
+
+' ========= Связи внутри фреймворка =========
+PrepI ..> PI : <<creates>>
+ProcI ..> PI : <<uses>>
+ProcI ..> PO : <<creates>>
+TrainI ..> PI : <<uses>>
+InterpI ..> PO : <<uses>>
+
+TrainP .. PrepI : <<requires>>
+TrainP .. TrainI : <<requires>>
+
+InfP .. PrepI : <<requires>>
+InfP .. ProcI : <<requires>>
+InfP .. InterpI : <<requires>>
+
+' ========= Пользовательские реализации =========
+MyPrep .up.|> PrepI : implements
+MyProc .up.|> ProcI : implements
+MyInterp .up.|> InterpI : implements
+MyTrain .up.|> TrainI : implements
+MyPI --|> PI : extends
+MyPO --|> PO : extends
+
+' ========= Внешние зависимости =========
+MyPrep ..> Raw : <<reads>>
+MyProc ..> FS : <<reads model>>
+MyTrain ..> FS : <<writes model>>
+MyInterp ..> ExtSys : <<writes>>
+
+Raw ..> MyPrep : input to
+ExtSys <.. MyInterp : output to
+
+' ========= Примечания =========
+note right of TrainP
+  <b>TrainPipeline</b>
+  Владеет: Preparator, Trainer
+  Выход: файл модели
+end note
+
+note right of InfP
+  <b>InferencePipeline</b>
+  Владеет: Preparator, Processor, Interpreter
+  Выход: результат интерпретации
+end note
+
+note bottom of DTO
+  <b>Точки расширения</b>
+  Пользователь обязан унаследовать
+  ProcessorInput и ProcessorOutput
+end note
+
+note bottom of Interfaces
+  <b>Обязательные интерфейсы</b>
+  Все 4 должны быть реализованы
+  пользователем
+end note
+@enduml
