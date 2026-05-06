@@ -13,14 +13,9 @@ abstract class ProcessorInput <<DTO>> {
 abstract class ProcessorOutput <<DTO>> {
 }
 
-' todo: it should be a file, not a class
-class ModelArtifact <<entity>> {
-}
-note right of ModelArtifact : Артефакт создается\nв процессе тренировки
-
 ' ========= Интерфейсы этапов =========
 interface Preparator {
-  + prepare(rawData: RawData) : ProcessorInput
+  + prepare(rawData: Any) : ProcessorInput
 }
 
 interface Processor {
@@ -28,40 +23,61 @@ interface Processor {
 }
 
 interface Interpreter {
-  + interpret(output: ProcessorOutput) : InterpreterOutput
+  + interpret(output: ProcessorOutput) : Any
 }
 
 interface Trainer {
-  + train(input: ProcessorInput) : ModelArtifact
+  + train(input: ProcessorInput) : void
 }
 
-' ========= Класс-дирижёр пайплайна =========
-class Pipeline {
+' ========= Пайплайны =========
+class TrainPipeline {
+  - preparator: Preparator
+  - trainer: Trainer
+  ..
+  + run(rawData: Any) : void
+  + setPreparator(Preparator) : void
+  + setTrainer(Trainer) : void
+}
+
+class InferencePipeline {
   - preparator: Preparator
   - processor: Processor
   - interpreter: Interpreter
   ..
-  + run(rawData: Any) : void
+  + run(rawData: Any) : Any
   + setPreparator(Preparator) : void
   + setProcessor(Processor) : void
   + setInterpreter(Interpreter) : void
 }
 
 ' ========= Связи =========
-Pipeline *-- Preparator
-Pipeline *-- Processor
-Pipeline *-- Interpreter
+TrainPipeline *-- Preparator
+TrainPipeline *-- Trainer
+
+InferencePipeline *-- Preparator
+InferencePipeline *-- Processor
+InferencePipeline *-- Interpreter
 
 Preparator ..> ProcessorInput : <<creates>>
 Processor ..> ProcessorInput : <<uses>>
 Processor ..> ProcessorOutput : <<creates>>
+Trainer ..> ProcessorInput : <<uses>>
 Interpreter ..> ProcessorOutput : <<uses>>
 
-Trainer ..> ProcessorInput : <<uses>>
-Trainer ..> ModelArtifact : <<creates>>
-Processor ..> ModelArtifact : <<uses>>
+' Примечание о модели
+note top of Processor
+  Модель загружается из файла
+  внутри process().
+  Фреймворк не управляет этим.
+end note
 
-' Показываем, что ModelArtifact — это тоже расширяемый класс
+note top of Trainer
+  train() сохраняет модель
+  в файл (pickle, H5, ONNX...).
+  Фреймворк не управляет форматом.
+end note
+
 note top of ProcessorInput
   <b>Точки расширения фреймворка</b>
   Пользователь <b>обязан</b> унаследовать
