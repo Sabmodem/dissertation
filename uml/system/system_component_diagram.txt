@@ -1,0 +1,317 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+title Fraud Detection ML Pipeline — Component Diagram
+
+' ============================================================
+' ФРЕЙМВОРК (ВНЕШНИЙ)
+' ============================================================
+package "ML Pipeline Framework" as Framework #White {
+    
+    package "Contracts (DTO)" as FW_DTO #LightCyan {
+        component "ProcessorInput" as PI_FW <<abstract>>
+        component "ProcessorOutput" as PO_FW <<abstract>>
+    }
+    
+    package "Interfaces" as FW_Interfaces #LightCyan {
+        interface "Preparator" as PrepI_FW
+        interface "Trainer" as TrainI_FW
+        interface "Processor" as ProcI_FW
+        interface "Interpreter" as InterpI_FW
+    }
+    
+    package "Pipelines" as FW_Pipelines #Thistle {
+        component "TrainPipeline" as TrainP_FW
+        component "InferencePipeline" as InfP_FW
+    }
+}
+
+' ============================================================
+' ТОЧКИ РАСШИРЕНИЯ (DTO)
+' ============================================================
+package "Data Transfer Objects" as DTO_Pkg #LightCyan {
+    component "FraudInput" as FraudIn <<extends ProcessorInput>>
+    component "FraudOutput" as FraudOut <<extends ProcessorOutput>>
+}
+
+note top of FraudIn
+    X: np.ndarray
+    y: np.ndarray
+    feature_names: List[str]
+    dataset_name: str
+end note
+
+note top of FraudOut
+    y_true, y_pred: np.ndarray
+    y_proba: np.ndarray
+    metrics: Dict[str, float]
+    confusion_matrix: np.ndarray
+    roc_curve: Dict
+    pr_curve: Dict
+    dataset: str
+end note
+
+' ============================================================
+' CORE ABSTRACTIONS
+' ============================================================
+package "Core Abstractions" as Core #LightYellow {
+    
+    component "BaseVectorizer" as BaseVec <<abstract>>
+    component "BaseModel" as BaseMod <<abstract>>
+}
+
+note left of BaseVec
+    fit()
+    transform()
+    fit_transform()
+    get_feature_names()
+    get_output_dim()
+end note
+
+note left of BaseMod
+    build_model()
+    train()
+    predict()
+    predict_proba()
+    save_model()
+    load_model()
+end note
+
+' ============================================================
+' PREPARATOR IMPLEMENTATIONS
+' ============================================================
+package "Preparator Implementations" as Preparators #LightGreen {
+    component "TfidfVectorizer" as TFIDF
+    component "TransformerTokenizer" as TransTok
+}
+
+note bottom of TFIDF
+    prepare(rawData)
+    fit(texts)
+    transform(texts)
+    get_vocabulary()
+    get_idf_values()
+end note
+
+note bottom of TransTok
+    prepare(rawData)
+    transform(texts)
+    transform_with_attention()
+    decode(token_ids)
+    batch_decode()
+    get_vocab()
+end note
+
+' ============================================================
+' MODEL IMPLEMENTATIONS
+' ============================================================
+package "Model Implementations\n(Trainer + Processor)" as Models #LightBlue {
+    component "SklearnModel" as Sklearn
+    component "KerasModel" as Keras
+    component "HuggingFaceModel" as HF
+    component "HFDataset" as HFData
+}
+
+note right of Sklearn
+    Wrapper для:
+    • LogisticRegression
+    • RandomForestClassifier
+    • SVC
+    • XGBClassifier
+    • Любой sklearn estimator
+end note
+
+note right of Keras
+    Архитектуры:
+    • [256, 128, 64]
+    • [512, 256, 128, 64]
+    Активации: relu, tanh, sigmoid
+    Callbacks: EarlyStopping
+end note
+
+note right of HF
+    Модели:
+    • GPT-2
+    • BERT / DistilBERT
+    • FinBERT
+    • RoBERTa
+    Использует HuggingFace Trainer
+end note
+
+note right of HFData
+    PyTorch Dataset wrapper
+    для HuggingFace Trainer
+end note
+
+' ============================================================
+' SUPPORTING COMPONENTS
+' ============================================================
+package "Supporting Components" as Support #LightSalmon {
+    component "DataLoader" as DLoader
+    component "Evaluator" as Eval
+    component "Visualizer" as Vis <<Interpreter>>
+}
+
+note left of DLoader
+    load_data(filepath)
+    split_data()
+    preprocess()
+    get_train_data()
+    get_val_data()
+    get_test_data()
+    get_all_data()
+    load_and_transform_external()
+end note
+
+note right of Eval
+    evaluate(model, X, y)
+    metrics: FraudOutput
+    evaluate_all_splits()
+    compare_metrics()
+    print_metrics()
+end note
+
+note left of Vis
+    interpret(FraudOutput)
+    plot_all()
+    plot_confusion_matrix()
+    plot_roc_curve()
+    plot_pr_curve()
+    plot_training_history()
+    compare_models_barplot()
+    compare_models_radar()
+end note
+
+' ============================================================
+' ORCHESTRATION
+' ============================================================
+package "Orchestration" as Orch #MistyRose {
+    component "Experiment" as Exp
+}
+
+note bottom of Exp
+    <b>Оркестратор полного цикла</b>
+    run(data_file)
+    run_training_only()
+    run_evaluation_only()
+    evaluate_on_external_dataset()
+    Координирует:
+    DataLoader → Model → Evaluator → Visualizer
+end note
+
+' ============================================================
+' EXTERNAL
+' ============================================================
+package "External Systems" as Ext #Gainsboro {
+    database "File System\n(CSV datasets)" as FS_CSV
+    database "File System\n(trained models)" as FS_Models
+    database "File System\n(plots PNG)" as FS_Plots
+    component "Logging\nSystem" as Log
+}
+
+note right of Log
+    Логи экспериментов
+    Метрики в консоль
+    Сравнительные таблицы
+end note
+
+' ============================================================
+' СВЯЗИ
+' ============================================================
+
+' Framework DTO наследование
+FraudIn -up-|> PI_FW
+FraudOut -up-|> PO_FW
+
+' Framework Interfaces реализация
+BaseVec ..|> PrepI_FW
+TFIDF -up-|> BaseVec
+TransTok -up-|> BaseVec
+
+BaseMod ..|> TrainI_FW
+BaseMod ..|> ProcI_FW
+Sklearn -up-|> BaseMod
+Keras -up-|> BaseMod
+HF -up-|> BaseMod
+Vis ..|> InterpI_FW
+
+' DTO связи
+TFIDF ..> FraudIn : <<creates>>
+TransTok ..> FraudIn : <<creates>>
+Sklearn ..> FraudOut : <<creates>>
+Keras ..> FraudOut : <<creates>>
+HF ..> FraudOut : <<creates>>
+Eval ..> FraudOut : <<creates>>
+Vis ..> FraudOut : <<uses>>
+
+' Experiment композиция
+Exp *-- DLoader
+Exp *-- Eval
+Exp *-- Vis
+Exp *-- BaseMod
+
+' DataLoader использует BaseVectorizer
+DLoader *-- BaseVec
+
+' HuggingFaceModel использует HFDataset
+HF *-- HFData
+
+' Внешние зависимости
+DLoader ..> FS_CSV : <<reads CSV>>
+Sklearn ..> FS_Models : <<joblib>>
+Keras ..> FS_Models : <<h5/keras>>
+HF ..> FS_Models : <<save_pretrained>>
+Vis ..> FS_Plots : <<saves PNG>>
+Exp ..> Log : <<writes logs>>
+
+' Evaluator использует BaseModel для predict
+Eval ..> BaseMod : <<uses predict()>>
+
+' ============================================================
+' ПРИМЕЧАНИЯ (привязаны к пакетам)
+' ============================================================
+note right of FW_DTO
+    <b>Точки расширения фреймворка</b>
+    Обязательны для наследования
+end note
+
+note right of FW_Interfaces
+    <b>Обязательные интерфейсы</b>
+    Preparator, Trainer, Processor, Interpreter
+end note
+
+note right of Core
+    <b>Адаптеры фреймворка</b>
+    BaseVectorizer → Preparator
+    BaseModel → Trainer + Processor
+    Evaluator → (расширение, не из фреймворка)
+    Visualizer → Interpreter
+end note
+
+note bottom of Preparators
+    <b>Стратегии векторизации</b>
+    TF-IDF: классический ML
+    Transformer: глубокое обучение
+end note
+
+note bottom of Models
+    <b>Три бэкенда моделей</b>
+    sklearn: классические алгоритмы
+    Keras: нейронные сети
+    HuggingFace: трансформеры
+end note
+
+note right of Support
+    <b>Вспомогательные компоненты</b>
+    DataLoader: загрузка и препроцессинг
+    Evaluator: расчёт метрик
+    Visualizer: визуализация
+end note
+
+@enduml

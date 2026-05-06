@@ -1,0 +1,332 @@
+@startuml
+!theme plain
+skinparam activityBackgroundColor LightYellow
+skinparam activityBorderColor DarkSlateGray
+skinparam activityDiamondBackgroundColor LightCyan
+skinparam activityStartColor LimeGreen
+skinparam activityEndColor Tomato
+
+title Fraud Detection ML Pipeline — Activity Diagram
+
+start
+
+:Разработчик определяет конфигурацию системы;
+
+partition "Конфигурация компонентов" {
+  
+  :Выбрать стратегию векторизации\n(Preparator);
+  
+  if (Тип векторизатора?) then (<b>TF-IDF</b>)
+    :Создать TfidfVectorizer\n(max_features, ngram_range);
+  else (<b>Transformer</b>)
+    :Создать TransformerTokenizer\n(model_name, max_length);
+  endif
+  
+  :Выбрать модель\n(Trainer + Processor);
+  
+  if (Тип модели?) then (<b>Классический ML</b>)
+    :Создать SklearnModel\n(LogisticRegression / RandomForest / SVC / XGBoost);
+  elseif (<b>Нейронная сеть</b>) then
+    :Создать KerasModel\n(input_dim, layers, activation, dropout);
+  else (<b>Трансформер</b>)
+    :Создать HuggingFaceModel\n(model_name, num_labels, epochs);
+  endif
+  
+  note right
+    Модель одновременно реализует
+    Trainer (для обучения) и
+    Processor (для инференса)
+  end note
+  
+  :Создать DataLoader\n(vectorizer, test_size, val_size);
+  
+  :Создать Evaluator\n(pos_label);
+  
+  :Создать Visualizer\n(save_dir, save_plots, show_plots);
+  
+  note right
+    Visualizer реализует
+    Interpreter фреймворка
+  end note
+  
+}
+
+partition "Оркестрация эксперимента" {
+  
+  :Создать Experiment\n(name, model, data_loader, evaluator, visualizer);
+  
+  note right
+    Experiment — оркестратор,
+    не предусмотренный фреймворком.
+    Автоматизирует полный цикл.
+  end note
+  
+}
+
+partition "Выполнение полного цикла (run)" {
+  
+  :Experiment.run(data_file);
+  
+  :Загрузка данных\nDataLoader.load_data(filepath);
+  
+  note right
+    Чтение CSV с биржевыми данными:
+    текст заявок/описаний, метки fraud/legit
+  end note
+  
+  :Разбиение на выборки\nDataLoader.split_data();
+  
+  note right
+    train_df (60%)
+    val_df (20%)
+    test_df (20%)
+  end note
+  
+  :Предобработка\nDataLoader.preprocess();
+  
+  :Кодирование меток\nLabelEncoder.fit_transform();
+  
+  note right
+    'yes'/'no' → 1/0
+  end note
+  
+  :Векторизация текстов;
+  
+  :BaseVectorizer.fit_transform(train_texts)\n→ X_train;
+  
+  :BaseVectorizer.transform(val_texts)\n→ X_val;
+  
+  :BaseVectorizer.transform(test_texts)\n→ X_test;
+  
+  note right
+    На этом этапе Preparator фреймворка
+    создаёт FraudInput (DTO)
+    с векторизованными данными
+  end note
+  
+  :Получение подготовленных данных;
+  
+  :X_train, y_train = get_train_data();
+  :X_val, y_val = get_val_data();
+  :X_test, y_test = get_test_data();
+  
+}
+
+partition "Обучение модели (Trainer)" {
+  
+  :Model.train(X_train, y_train, X_val, y_val);
+  
+  if (Тип модели?) then (<b>SklearnModel</b>)
+    :build_model()\n(инициализация estimator);
+    :estimator.fit(X_train, y_train);
+    :train_score, val_score;
+    
+  elseif (<b>KerasModel</b>) then
+    :build_model()\n(Sequential + Dense + Dropout);
+    :Компиляция\n(optimizer, loss, metrics);
+    :model.fit(X_train, y_train,\nvalidation_data=(X_val, y_val),\ncallbacks=[EarlyStopping]);
+    
+    note right
+      До 20 эпох
+      EarlyStopping: patience=3
+    end note
+    
+  else (<b>HuggingFaceModel</b>)
+    :build_model()\n(AutoModel + AutoTokenizer);
+    :Создание HFDataset\nдля train и val;
+    :Настройка TrainingArguments;
+    :Trainer.train();
+    
+    note right
+      Использует HuggingFace Trainer API
+      Compute metrics:
+      accuracy, f1, precision, recall
+    end note
+    
+  endif
+  
+  :Сохранение истории обучения\ntraining_history: Dict;
+  
+  :Сохранение модели в файл\nModel.save_model(filepath);
+  
+  note right
+    Sklearn → joblib (*.pkl)
+    Keras → model.save (*.h5)
+    HF → save_pretrained (config.json + pytorch_model.bin)
+  end note
+  
+}
+
+partition "Оценка модели (Evaluator)" {
+  
+  if (eval_on_train?) then (<b>Да</b>)
+    :Evaluator.evaluate(model, X_train, y_train, "train");
+    
+    note right
+      Вычисление метрик:
+      accuracy, precision, recall, f1
+      confusion_matrix (TN, FP, FN, TP)
+      ROC curve (fpr, tpr, auc)
+      PR curve (precision, recall)
+      
+      Результат: FraudOutput (DTO)
+    end note
+    
+  else (<b>Нет</b>)
+  endif
+  
+  if (eval_on_val?) then (<b>Да</b>)
+    :Evaluator.evaluate(model, X_val, y_val, "validation");
+  else (<b>Нет</b>)
+  endif
+  
+  if (eval_on_test?) then (<b>Да</b>)
+    :Evaluator.evaluate(model, X_test, y_test, "test");
+  else (<b>Нет</b>)
+  endif
+  
+}
+
+partition "Визуализация (Interpreter)" {
+  
+  if (generate_plots?) then (<b>Да</b>)
+    
+    :dataset_list = [train, validation, test];
+    :index = 0;
+    
+    repeat
+      :dataset = dataset_list[index];
+      :Visualizer.plot_all(metrics, model_name, dataset);
+      note right
+        • Confusion Matrix
+        • ROC Curve
+        • Precision-Recall Curve
+      end note
+      :index = index + 1;
+    repeat while (index < size(dataset_list)) is (Да)
+    -> Нет;
+    
+    if (Есть training_history?) then (<b>Да</b>)
+      :Visualizer.plot_training_history(history, model_name);
+      
+      note right
+        Графики loss и accuracy
+        по эпохам
+      end note
+      
+    else (<b>Нет</b>)
+    endif
+    
+  else (<b>Нет</b>)
+  endif
+  
+}
+
+partition "Завершение эксперимента" {
+  
+  :Experiment возвращает\nresults: Dict;
+  
+  note right
+    <b>Структура результатов:</b>
+    {
+      'train': FraudOutput,
+      'validation': FraudOutput,
+      'test': FraudOutput,
+      'training_history': {...}
+    }
+    
+    + модель сохранена на диск
+    + графики в save_dir
+  end note
+  
+}
+
+if (Сравнить модели?) then (<b>Да</b>)
+  
+  partition "Сравнение нескольких моделей" {
+    
+    :Создать несколько Experiment\nс разными моделями;
+    
+    :model_list = [model1, model2, model3];
+    :idx = 0;
+    
+    repeat
+      :model = model_list[idx];
+      :Experiment.run(data_file,\nevaluate_on_test=True,\n.generate_plots=False);
+      :idx = idx + 1;
+    repeat while (idx < size(model_list)) is (Да)
+    -> Нет;
+    
+    :Сбор результатов\nall_results: Dict[str, FraudOutput];
+    
+    :Сравнительная визуализация;
+    
+    :Visualizer.compare_models_barplot(all_results, metric='f1');
+    
+    note right
+      Bar chart сравнения
+      моделей по ключевой метрике
+    end note
+    
+    :Visualizer.compare_models_radar(all_results);
+    
+    note right
+      Radar chart многомерного
+      сравнения моделей
+      (accuracy, precision, recall, f1)
+    end note
+    
+    :Выбор лучшей модели\nпо заданной метрике;
+    
+  }
+  
+else (<b>Нет</b>)
+endif
+
+if (Оценить на внешних данных?) then (<b>Да</b>)
+  
+  partition "Инференс на внешних данных" {
+    
+    :Experiment.evaluate_on_external_dataset(external_file, "external");
+    
+    :DataLoader.load_and_transform_external(filepath);
+    
+    note right
+      Загрузка новых биржевых данных
+      из CSV файла
+    end note
+    
+    :LabelEncoder.transform(labels)\n(используется существующий encoder);
+    
+    :Vectorizer.transform(texts)\n(используется существующий векторизатор);
+    
+    :Model.predict(X_external)\n→ y_pred;
+    
+    :Model.predict_proba(X_external)\n→ y_proba;
+    
+    :Evaluator.evaluate(model, X_external, y_external, "external");
+    
+    note right
+      Вычисление метрик на новых данных.
+      FraudOutput с результатами.
+    end note
+    
+    :Visualizer.interpret(fraud_output);
+    
+    note right
+      Постобработка результатов:
+      • Графики (Confusion Matrix, ROC, PR)
+      • Сохранение в PNG
+      • Вывод метрик в консоль
+    end note
+    
+  }
+  
+else (<b>Нет</b>)
+endif
+
+:Анализ результатов и\nпринятие решений;
+
+stop
+
+@enduml
