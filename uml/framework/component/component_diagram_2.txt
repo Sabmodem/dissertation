@@ -1,0 +1,51 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро Фреймворка" as Core {
+  
+  package "контракты (DTO)" as DTO {
+    component "ProcessorInput" as PI <<abstract>>
+    component "ProcessorOutput" as PO <<abstract>>
+  }
+  
+  package "Интерфейсы" as Interfaces {
+    interface "Preparator" as PrepI
+    interface "Processor" as ProcI
+    interface "Interpreter" as InterpI
+    interface "Trainer" as TrainI
+  }
+}
+
+package "Пользовательские Реализации" as User {
+  component "MyPreparator" as MyPrep
+  component "MyProcessor" as MyProc
+  component "MyInterpreter" as MyInterp
+  component "MyTrainer" as MyTrain
+  component "MyInput расширяет\nProcessorInput" as MyPI
+  component "MyOutput расширяет\nProcessorOutput" as MyPO
+}
+
+' ========= Пользовательские реализации =========
+MyPrep .up.|> PrepI : реализует
+MyProc .up.|> ProcI : реализует
+MyInterp .up.|> InterpI : реализует
+MyTrain .up.|> TrainI : реализует
+MyPI --|> PI : расширяет
+MyPO --|> PO : расширяет
+
+note right of User
+  <b>Пользователь реализует:</b>
+  • 4 интерфейса этапов
+  • 2 контракта данных (DTO)
+  
+  Фреймворк вызывает пользовательский код
+  через эти точки расширения
+end note
+
+@enduml

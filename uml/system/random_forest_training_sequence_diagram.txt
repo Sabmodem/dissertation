@@ -1,0 +1,81 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "TrainPipeline" as Train
+participant "TextFraudPreparator" as Prep
+participant "RFTrainer" as RFTrain
+collections "Файловая\nсистема" as FS
+
+Dev -> Train : run(rawData)
+activate Train
+
+' ========= Этап подготовки =========
+Train -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>Этап подготовки (fit_mode=True)</b>
+  1. Очистка текста.
+  2. Извлечение лингвистических признаков.
+  3. Обучение TfidfVectorizer на корпусе.
+  4. Обучение StandardScaler.
+  5. Формирование combined_features.
+  6. Сохранение артефактов на диск.
+  
+  Возвращает список FraudDetectionInput
+  с заполненными:
+  • combined_features (X)
+  • label (y)
+end note
+
+Prep -> FS : сохраняет артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Train : List[FraudDetectionInput]\n(combined_features + labels)
+deactivate Prep
+
+' ========= Этап обучения =========
+Train -> RFTrain : train(FraudDetectionInput)
+activate RFTrain
+
+note right of RFTrain
+  <b>Этап обучения RF</b>
+  1. Извлекает X = combined_features,
+     y = labels.
+  2. Разбивает на train/validation
+     (StratifiedKFold, 5 фолдов).
+  3. RandomizedSearchCV:
+     • n_estimators: {100, 200, 500}
+     • max_depth: {10, 20, None}
+     • min_samples_split: {2, 5, 10}
+     • class_weight: {balanced, None}
+  4. Оптимизация по F1-score.
+  5. Обучение финальной модели
+     на всех данных с лучшими
+     гиперпараметрами.
+end note
+
+RFTrain -> FS : сохраняет артефакты\n• rf_model.joblib\n• feature_names.json
+
+note right of FS
+  <b>Сохраняемые артефакты:</b>
+  • rf_model.joblib — обученная модель
+  • feature_names.json — имена признаков
+  для SHAP-интерпретации
+  
+  TfidfVectorizer и Scaler уже сохранены
+  Preparator'ом на этапе подготовки.
+  
+  <b>Для инференса потребуются</b>
+  все четыре файла вместе.
+end note
+
+deactivate RFTrain
+
+Train --> Dev : void
+deactivate Train
+
+@enduml

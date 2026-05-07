@@ -4,11 +4,9 @@ skinparam activityBackgroundColor LightYellow
 skinparam activityBorderColor DarkSlateGray
 skinparam activityDiamondBackgroundColor LightCyan
 
-title ML Pipeline Framework — Activity Diagram
-
 start
 
-:Разработчик выбирает сценарий;
+:Исследователь выбирает сценарий;
 
 if (Сценарий?) then (<b>Обучение</b>)
   :Создать TrainPipeline;

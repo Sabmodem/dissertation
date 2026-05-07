@@ -1,0 +1,112 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "InferencePipeline" as Inf
+participant "TextFraudPreparator" as Prep
+participant "AEProcessor" as AEProc
+participant "AEInterpreter" as AEInterp
+collections "Файловая\nсистема" as FS
+
+Dev -> Inf : run(rawData)
+activate Inf
+
+' ========= Этап подготовки =========
+Inf -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>fit_mode = False</b>
+  Загружает TfidfVectorizer и Scaler,
+  применяет к новым данным.
+  
+  Возвращает FraudDetectionInput
+  с combined_features (без меток).
+end note
+
+Prep -> FS : загружает артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Inf : List[FraudDetectionInput]\n(combined_features)
+deactivate Prep
+
+' ========= Цикл инференса =========
+loop для каждого FraudDetectionInput
+
+Inf -> AEProc : process(FraudDetectionInput)
+activate AEProc
+
+AEProc -> FS : загружает артефакты\n(autoencoder_model.h5,\nanomaly_threshold.json,\nfeature_scaler.pkl)
+
+note right of AEProc
+  <b>Инференс AE</b>
+  1. Загружает модель и порог.
+  2. Извлекает combined_features.
+  3. model.predict() →
+     восстановленный вектор.
+  4. MSE = средний квадрат ошибки
+     между входом и восстановлением.
+  5. anomaly_score = MSE / threshold
+     (нормализация в [0, ∞)).
+  6. Если MSE > threshold →
+     prediction = 1 (Fraud).
+  7. Формирует FraudDetectionOutput:
+     • prediction
+     • anomaly_score
+     • method_name = "Autoencoder"
+     • explanation = {mse, threshold}
+end note
+
+AEProc --> Inf : FraudDetectionOutput
+deactivate AEProc
+
+' ========= Интерпретация =========
+Inf -> AEInterp : interpret(FraudDetectionOutput)
+activate AEInterp
+
+note right of AEInterp
+  <b>Интерпретация AE</b>
+  1. Сравнивает anomaly_score с 1.0
+     (порог после нормализации).
+  2. Формирует объяснение:
+     "MSE восстановления: 0.034,
+     порог: 0.021.
+     Превышение в 1.6 раза.
+     Документ аномален."
+  3. Накапливает ошибки для
+     итоговой визуализации.
+end note
+
+AEInterp -> AEInterp : накопление ошибок\nдля итоговой гистограммы
+
+AEInterp --> Inf : Any (отчёт с anomaly_score)
+deactivate AEInterp
+
+end
+
+' ========= Итоговая визуализация =========
+Inf -> AEInterp : финальный вызов\nplot_reconstruction_error()
+
+note right of AEInterp
+  <b>Итоговая визуализация:</b>
+  гистограмма распределения
+  ошибок восстановления для
+  всех документов.
+  
+  Ожидается бимодальное
+  распределение:
+  • пик нормальных документов
+    (низкая ошибка)
+  • хвост аномалий
+    (высокая ошибка)
+  
+  Это будет ключевой график
+  для главы 4.
+end note
+
+Inf --> Dev : Any (сводный результат + график)
+deactivate Inf
+
+@enduml

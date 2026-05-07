@@ -13,41 +13,15 @@ rectangle "Точки расширения фреймворка" {
   usecase "Реализовать Trainer" as UC5
 }
 
-rectangle "Использование пайплайнов" {
-  usecase "Настроить TrainPipeline" as UC6
-  usecase "Запустить TrainPipeline" as UC7
-  usecase "Настроить InferencePipeline" as UC8
-  usecase "Запустить InferencePipeline" as UC9
-}
-
-' Обязательные расширения
 Dev --> UC1 : <<обязательно>>
 Dev --> UC2 : <<обязательно>>
 Dev --> UC3 : <<обязательно>>
 Dev --> UC4 : <<обязательно>>
 Dev --> UC5 : <<обязательно>>
 
-' Использование пайплайнов
-Dev --> UC6
-Dev --> UC7
-Dev --> UC8
-Dev --> UC9
-
-' Связи use cases с компонентами
 UC2 ..> UC1 : <<использует>>
 UC3 ..> UC1 : <<использует>>
 UC5 ..> UC1 : <<использует>>
-
-' TrainPipeline: Preparator + Trainer
-UC6 ..> UC2 : <<включает>>
-UC6 ..> UC5 : <<включает>>
-UC7 ..> UC6 : <<предшествует>>
-
-' InferencePipeline: Preparator + Processor + Interpreter
-UC8 ..> UC2 : <<включает>>
-UC8 ..> UC3 : <<включает>>
-UC8 ..> UC4 : <<включает>>
-UC9 ..> UC8 : <<предшествует>>
 
 note top of UC1
   <b>Обязательное расширение</b>
@@ -59,16 +33,5 @@ note top of UC5
   <b>Обязательное расширение</b>
   Обучение + сохранение
   модели в файл
-end note
-
-note right of UC7
-  <b>Результат:</b>
-  файл модели на диске
-end note
-
-note right of UC9
-  <b>Результат:</b>
-  произвольный вывод
-  Interpreter'а
 end note
 @enduml

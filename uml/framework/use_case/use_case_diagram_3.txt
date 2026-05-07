@@ -1,0 +1,33 @@
+@startuml
+left to right direction
+skinparam actorBackgroundColor LightBlue
+skinparam usecaseBackgroundColor LightYellow
+
+actor "Исследователь" as Dev
+
+rectangle "Использование пайплайнов" {
+  usecase "Настроить InferencePipeline" as UC8
+  usecase "Запустить InferencePipeline" as UC9
+}
+
+rectangle "Точки расширения (используемые)" {
+  usecase "Реализовать Preparator" as UC2
+  usecase "Реализовать Processor" as UC3
+  usecase "Реализовать Interpreter" as UC4
+  usecase "Определить DTO\n(ProcessorInput, ProcessorOutput)" as UC1
+}
+
+Dev --> UC8
+Dev --> UC9
+
+UC8 ..> UC2 : <<включает>>
+UC8 ..> UC3 : <<включает>>
+UC8 ..> UC4 : <<включает>>
+UC9 ..> UC8 : <<предшествует>>
+
+note right of UC9
+  <b>Результат:</b>
+  произвольный вывод
+  Interpreter'а
+end note
+@enduml

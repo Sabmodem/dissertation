@@ -1,0 +1,93 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam abstractClassBackgroundColor Lavender
+left to right direction
+
+' ========= Абстрактные контракты ядра (из главы 2) =========
+abstract class ProcessorInput <<DTO, Core>> {
+}
+
+abstract class ProcessorOutput <<DTO, Core>> {
+}
+
+note top of ProcessorInput
+  <b>Абстрактный контракт ядра</b>
+  Определён в главе 2.
+  Пользователь обязан унаследовать.
+end note
+
+note top of ProcessorOutput
+  <b>Абстрактный контракт ядра</b>
+  Определён в главе 2.
+  Пользователь обязан унаследовать.
+end note
+
+' ========= Конкретные DTO для текстовой задачи =========
+class FraudDetectionInput <<DTO, User>> {
+  + raw_text: str
+  + report_id: str
+  + label: int (optional)
+  + tfidf_features: ndarray (optional)
+  + linguistic_features: dict (optional)
+  + combined_features: ndarray (optional)
+}
+
+class FraudDetectionOutput <<DTO, User>> {
+  + report_id: str
+  + prediction: int
+  + fraud_probability: float
+  + anomaly_score: float (optional)
+  + method_name: str
+  + explanation: dict (optional)
+}
+
+' ========= Наследование =========
+FraudDetectionInput --|> ProcessorInput
+FraudDetectionOutput --|> ProcessorOutput
+
+' ========= Примечания =========
+note right of FraudDetectionInput
+  <b>Входной контракт для задачи антифрода</b>
+  
+  <b>raw_text:</b> исходный текст раздела MD&A
+  <b>report_id:</b> уникальный идентификатор документа
+  <b>label:</b> 0 = Non-Fraud, 1 = Fraud.
+  Опционален — заполняется только
+  для размеченных данных (обучение RF).
+  <b>tfidf_features:</b> разреженный вектор TF-IDF,
+  заполняется Preparator'ом.
+  <b>linguistic_features:</b> словарь лингвистических
+  метрик (длина текста, Fog Index,
+  тональность, доля пассива и др.).
+  <b>combined_features:</b> объединённый вектор
+  TF-IDF + лингвистические метрики,
+  нормализованный. Используется RF и AE.
+  
+  <b>Гибкость:</b> признаки заполняются
+  постепенно (лениво) разными этапами
+  обработки — не все сразу обязательны.
+end note
+
+note right of FraudDetectionOutput
+  <b>Выходной контракт для задачи антифрода</b>
+  
+  <b>report_id:</b> идентификатор документа
+  <b>prediction:</b> 0 = Non-Fraud, 1 = Fraud
+  <b>fraud_probability:</b> вероятность fraud (RF)
+  <b>anomaly_score:</b> оценка аномальности (AE)
+  <b>method_name:</b> "RuleBased" | "RandomForest" | "Autoencoder"
+  <b>explanation:</b> словарь с интерпретацией:
+    • для RF: топ-K SHAP-признаков
+    • для AE: ошибка восстановления
+    • для Rule-based: список сработавших правил
+  
+  <b>Единый контракт для трёх методов:</b>
+  не все поля заполняются каждым методом.
+  Интерпретатор использует релевантные.
+end note
+
+@enduml

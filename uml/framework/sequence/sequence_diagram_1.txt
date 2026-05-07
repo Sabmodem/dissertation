@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "TrainPipeline" as Train
+participant "Preparator" as Prep
+participant "Trainer" as Trainer
+collections "Файловая\nсистема" as FS
+
+Dev -> Train : run(rawData)
+activate Train
+
+Train -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>Этап подготовки</b>
+  • Загрузка и валидация данных
+  • Преобразование в ProcessorInput
+  • Аугментация данных
+end note
+
+Prep --> Train : ProcessorInput
+deactivate Prep
+
+Train -> Trainer : train(ProcessorInput)
+activate Trainer
+
+Trainer -> Trainer : обучение модели
+note right of Trainer
+  <b>Этап обучения</b>
+  • Инициализация модели
+  • Цикл обучения (эпохи)
+  • Валидация на отложенной выборке
+  • Подбор гиперпараметров
+end note
+
+Trainer -> FS : сохраняет модель в файл\n(pickle/H5/ONNX/...)
+deactivate Trainer
+
+Train --> Dev : void
+deactivate Train
+
+note right of FS
+  <b>Файловая система</b>
+  Модель сохранена.
+  Фреймворк не управляет
+  форматом и путём.
+  
+  Форматы:
+  • Python pickle (.pkl)
+  • TensorFlow/Keras (.h5)
+  • ONNX (.onnx)
+  • PyTorch (.pt)
+  • и другие
+end note
+
+@enduml

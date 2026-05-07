@@ -1,0 +1,87 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "InferencePipeline" as Inf
+participant "TextFraudPreparator" as Prep
+participant "RuleBasedFraudProcessor" as RProc
+participant "RuleBasedFraudInterpreter" as RInterp
+collections "Файловая\nсистема" as FS
+
+Dev -> Inf : run(rawData)
+activate Inf
+
+' ========= Этап подготовки =========
+Inf -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>Этап подготовки</b>
+  fit_mode = False:
+  загружает TF-IDF и Scaler с диска.
+  
+  Для Rule-based:
+  • TF-IDF вычисляется, но НЕ будет
+    использован процессором.
+  • linguistic_features извлекаются
+    в полном объёме.
+  
+  Возвращает список FraudDetectionInput.
+end note
+
+Prep -> FS : загружает артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Inf : List[FraudDetectionInput]
+deactivate Prep
+
+' ========= Цикл по документам =========
+loop для каждого FraudDetectionInput
+
+Inf -> RProc : process(FraudDetectionInput)
+activate RProc
+
+note right of RProc
+  <b>Rule-based инференс</b>
+  1. Извлекает linguistic_features.
+  2. Проверяет каждое правило:
+     • Word Count > порог?
+     • Fog Index > порог?
+     • Sentiment > порог?
+     • Passive Voice > порог?
+     • Uncertainty > порог?
+  3. Агрегирует: если сработало ≥
+     min_rules_triggered → Fraud.
+  4. Формирует FraudDetectionOutput:
+     • prediction = 0 или 1
+     • method_name = "RuleBased"
+     • explanation = список сработавших
+       правил и их значений.
+end note
+
+RProc --> Inf : FraudDetectionOutput
+deactivate RProc
+
+Inf -> RInterp : interpret(FraudDetectionOutput)
+activate RInterp
+
+note right of RInterp
+  <b>Интерпретация</b>
+  • Форматирует объяснение:
+    "Документ {id} помечен как Fraud.
+     Сработали правила: ..."
+  • Логирует в консоль/файл.
+  • Возвращает структурированный отчёт.
+end note
+
+RInterp --> Inf : Any (отчёт)
+deactivate RInterp
+
+end
+
+Inf --> Dev : Any (сводный результат)
+deactivate Inf
+
+@enduml

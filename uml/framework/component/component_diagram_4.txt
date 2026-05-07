@@ -1,0 +1,28 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро Фреймворка" as Core {
+  component "DTO Contracts" as DTO
+  component "Interfaces\n(4 stage interfaces)" as Interfaces
+  component "Pipelines\n(Train + Inference)" as Pipelines
+}
+
+package "Пользовательские Реализации" as User {
+  component "Stage Implementations\n(MyPreparator, MyProcessor...)" as Impl
+  component "Custom DTOs\n(MyInput, MyOutput)" as CustomDTO
+}
+
+package "Внешние Интерфейсы" as Ext {
+  component "Data Sources\n(CSV, JSON, Images)" as Data
+  component "Model Storage\n(pkl, h5, ONNX)" as Models
+  component "Output Targets\n(DB, APIs, Alerts)" as Targets
+}
+
+Core --> User : <<точки расширения>>
+User --> Ext : <<Операции ввода/вывода>>
+
+@enduml

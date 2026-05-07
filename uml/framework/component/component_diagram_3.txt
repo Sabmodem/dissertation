@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+
+package "Пользовательские Реализации" as User {
+  component "MyPreparator" as MyPrep
+  component "MyProcessor" as MyProc
+  component "MyInterpreter" as MyInterp
+  component "MyTrainer" as MyTrain
+}
+
+package "Внешние Интерфейсы" as Ext {
+  component "Raw Data\n(CSV, JSON, Images...)" as Raw
+  component "File System\n(model.pkl, model.h5...)" as FS
+  database "External Systems\n(DB, APIs, Alerts)" as ExtSys
+}
+
+' ========= Внешние зависимости =========
+MyPrep ..> Raw : <<читает>>
+MyProc ..> FS : <<читает модель>>
+MyTrain ..> FS : <<записывает модель>>
+MyInterp ..> ExtSys : <<записывает>>
+
+Raw ..> MyPrep : вход
+ExtSys <.. MyInterp : выход
+
+note bottom of Ext
+  <b>Внешние зависимости</b>
+  Фреймворк не управляет форматами файлов
+  и внешними системами.
+  Пользователь сам реализует чтение/запись.
+end note
+
+note top of MyProc
+  Загружает модель из файла
+  в process()
+end note
+
+note top of MyTrain
+  Сохраняет модель в файл
+  в train()
+end note
+
+@enduml

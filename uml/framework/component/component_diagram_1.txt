@@ -7,50 +7,32 @@ skinparam interfaceBorderColor SteelBlue
 skinparam packageBackgroundColor White
 skinparam packageBorderColor DarkSlateGray
 
-title ML Pipeline Framework — Component Diagram
-
-' ========= Пакеты =========
-package "Framework Core" as Core {
+package "Ядро Фреймворка" as Core {
   
-  package "Contracts (DTO)" as DTO {
+  package "Контракты (DTO)" as DTO {
     component "ProcessorInput" as PI <<abstract>>
     component "ProcessorOutput" as PO <<abstract>>
   }
   
-  package "Interfaces" as Interfaces {
+  package "Интерфейсы" as Interfaces {
     interface "Preparator" as PrepI
     interface "Processor" as ProcI
     interface "Interpreter" as InterpI
     interface "Trainer" as TrainI
   }
   
-  package "Pipelines" as Pipelines {
+  package "Пайплайны" as Pipelines {
     component "TrainPipeline" as TrainP
     component "InferencePipeline" as InfP
   }
 }
 
-package "User Implementation" as User {
-  component "MyPreparator" as MyPrep
-  component "MyProcessor" as MyProc
-  component "MyInterpreter" as MyInterp
-  component "MyTrainer" as MyTrain
-  component "MyInput extends\nProcessorInput" as MyPI
-  component "MyOutput extends\nProcessorOutput" as MyPO
-}
-
-package "External" as Ext {
-  component "Raw Data\n(CSV, JSON, Images...)" as Raw
-  component "File System\n(model.pkl, model.h5...)" as FS
-  database "External Systems\n(DB, APIs, Alerts)" as ExtSys
-}
-
 ' ========= Связи внутри фреймворка =========
-PrepI ..> PI : <<creates>>
-ProcI ..> PI : <<uses>>
-ProcI ..> PO : <<creates>>
-TrainI ..> PI : <<uses>>
-InterpI ..> PO : <<uses>>
+PrepI ..> PI : <<создает>>
+ProcI ..> PI : <<использует>>
+ProcI ..> PO : <<создает>>
+TrainI ..> PI : <<использует>>
+InterpI ..> PO : <<использует>>
 
 TrainP .. PrepI : <<requires>>
 TrainP .. TrainI : <<requires>>
@@ -58,23 +40,6 @@ TrainP .. TrainI : <<requires>>
 InfP .. PrepI : <<requires>>
 InfP .. ProcI : <<requires>>
 InfP .. InterpI : <<requires>>
-
-' ========= Пользовательские реализации =========
-MyPrep .up.|> PrepI : implements
-MyProc .up.|> ProcI : implements
-MyInterp .up.|> InterpI : implements
-MyTrain .up.|> TrainI : implements
-MyPI --|> PI : extends
-MyPO --|> PO : extends
-
-' ========= Внешние зависимости =========
-MyPrep ..> Raw : <<reads>>
-MyProc ..> FS : <<reads model>>
-MyTrain ..> FS : <<writes model>>
-MyInterp ..> ExtSys : <<writes>>
-
-Raw ..> MyPrep : input to
-ExtSys <.. MyInterp : output to
 
 ' ========= Примечания =========
 note right of TrainP
@@ -100,4 +65,5 @@ note bottom of Interfaces
   Все 4 должны быть реализованы
   пользователем
 end note
+
 @enduml

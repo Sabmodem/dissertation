@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam abstractClassBackgroundColor Lavender
+left to right direction
+
+' ========= Контракты данных =========
+abstract class ProcessorInput <<DTO>> {
+}
+
+abstract class ProcessorOutput <<DTO>> {
+}
+
+' ========= Интерфейсы этапов =========
+interface Preparator {
+  + prepare(rawData: Any) : ProcessorInput
+}
+
+interface Processor {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+interface Trainer {
+  + train(input: ProcessorInput) : void
+}
+
+' ========= Связи интерфейсов =========
+Preparator ..> ProcessorInput : <<создает>>
+Processor ..> ProcessorInput : <<использует>>
+Processor ..> ProcessorOutput : <<создает>>
+Trainer ..> ProcessorInput : <<использует>>
+Interpreter ..> ProcessorOutput : <<использует>>
+
+note top of ProcessorInput
+  <b>Точки расширения фреймворка</b>
+  Пользователь <b>обязан</b> унаследовать
+  ProcessorInput и ProcessorOutput
+end note
+
+@enduml

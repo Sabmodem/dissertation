@@ -4,16 +4,9 @@ skinparam classBackgroundColor LightYellow
 skinparam classBorderColor DarkSlateGray
 skinparam interfaceBackgroundColor LightCyan
 skinparam interfaceBorderColor SteelBlue
-skinparam abstractClassBackgroundColor Lavender
+left to right direction
 
-' ========= Контракты данных (Extension Points) =========
-abstract class ProcessorInput <<DTO>> {
-}
-
-abstract class ProcessorOutput <<DTO>> {
-}
-
-' ========= Интерфейсы этапов =========
+' ========= Интерфейсы (дублируются для контекста) =========
 interface Preparator {
   + prepare(rawData: Any) : ProcessorInput
 }
@@ -59,13 +52,6 @@ InferencePipeline *-- Preparator
 InferencePipeline *-- Processor
 InferencePipeline *-- Interpreter
 
-Preparator ..> ProcessorInput : <<creates>>
-Processor ..> ProcessorInput : <<uses>>
-Processor ..> ProcessorOutput : <<creates>>
-Trainer ..> ProcessorInput : <<uses>>
-Interpreter ..> ProcessorOutput : <<uses>>
-
-' Примечание о модели
 note top of Processor
   Модель загружается из файла
   внутри process().
@@ -76,12 +62,6 @@ note top of Trainer
   train() сохраняет модель
   в файл (pickle, H5, ONNX...).
   Фреймворк не управляет форматом.
-end note
-
-note top of ProcessorInput
-  <b>Точки расширения фреймворка</b>
-  Пользователь <b>обязан</b> унаследовать
-  ProcessorInput и ProcessorOutput
 end note
 
 @enduml

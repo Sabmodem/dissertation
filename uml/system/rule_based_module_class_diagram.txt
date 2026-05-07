@@ -1,0 +1,106 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+' ========= Интерфейсы ядра =========
+interface Processor <<Core>> {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter <<Core>> {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+' ========= Конфигурация правил =========
+class RuleConfig <<DTO>> {
+  + word_count_threshold: int
+  + fog_index_threshold: float
+  + sentiment_threshold: float
+  + passive_voice_threshold: float
+  + uncertainty_threshold: float
+  + min_rules_triggered: int
+}
+
+note right of RuleConfig
+  <b>Конфигурация порогов правил</b>
+  Загружается из JSON/YAML файла
+  в конструкторе RuleBasedFraudProcessor.
+  
+  <b>min_rules_triggered:</b>
+  минимальное количество сработавших
+  правил для классификации документа
+  как мошеннического (агрегация).
+end note
+
+' ========= Основные классы =========
+class RuleBasedFraudProcessor <<User>> {
+  - config: RuleConfig
+  - rules_triggered: dict
+  __
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+  - check_word_count(ling: dict) : bool
+  - check_fog_index(ling: dict) : bool
+  - check_sentiment(ling: dict) : bool
+  - check_passive_voice(ling: dict) : bool
+  - check_uncertainty(ling: dict) : bool
+  - aggregate_results() : (int, List[str])
+}
+
+note top of RuleBasedFraudProcessor
+  <b>Реализация интерфейса Processor</b>
+  для Rule-based детектора.
+  
+  <b>Не загружает модель</b> — загружает
+  конфигурацию правил из файла.
+  
+  <b>Логика:</b>
+  1. Извлекает linguistic_features из
+     FraudDetectionInput.
+  2. Проверяет каждое правило.
+  3. Агрегирует: если сработало ≥
+     min_rules_triggered → помечает
+     документ как Fraud.
+  
+  <b>Игнорирует</b> tfidf_features и
+  combined_features — для правил
+  нужны только лингвистические метрики.
+end note
+
+class RuleBasedFraudInterpreter <<User>> {
+  + interpret(output: FraudDetectionOutput) : Any
+  - format_alert(output: FraudDetectionOutput) : str
+  - log_to_console(report_id: str, rules: List[str]) : void
+}
+
+note top of RuleBasedFraudInterpreter
+  <b>Реализация интерфейса Interpreter</b>
+  для Rule-based детектора.
+  
+  <b>Постобработка:</b>
+  • Форматирует читаемое объяснение:
+    какие правила сработали.
+  • Логирует в консоль/файл.
+  • Возвращает структурированный отчёт.
+  
+  <b>Для Production:</b> может быть
+  расширен отправкой алертов в
+  Telegram/Slack/БД.
+end note
+
+' ========= Наследование =========
+RuleBasedFraudProcessor .up.|> Processor : реализует
+RuleBasedFraudInterpreter .up.|> Interpreter : реализует
+
+' ========= Связи =========
+RuleBasedFraudProcessor *-- RuleConfig : композиция
+
+' ========= Связи с DTO =========
+FraudDetectionInput .. RuleBasedFraudProcessor : <<использует>>
+FraudDetectionOutput .. RuleBasedFraudProcessor : <<создаёт>>
+FraudDetectionOutput .. RuleBasedFraudInterpreter : <<использует>>
+
+@enduml

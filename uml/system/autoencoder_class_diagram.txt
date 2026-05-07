@@ -1,0 +1,170 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+' ========= Интерфейсы ядра =========
+interface Trainer <<Core>> {
+  + train(input: ProcessorInput) : void
+}
+
+interface Processor <<Core>> {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter <<Core>> {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+' ========= Вспомогательный класс =========
+class AutoencoderModel <<Model>> {
+  - encoder: Sequential
+  - decoder: Sequential
+  - autoencoder: Model
+  - latent_dim: int
+  - input_dim: int
+  __
+  + call(inputs: Tensor) : Tensor
+  + get_reconstruction_error(inputs: Tensor) : float
+}
+
+note right of AutoencoderModel
+  <b>Нейросетевая архитектура</b>
+  
+  <b>Структура:</b>
+  Input (input_dim)
+  → Dense(128, ReLU)
+  → Dense(64, ReLU)
+  → Dense(latent_dim=16, ReLU)  [bottleneck]
+  → Dense(64, ReLU)
+  → Dense(128, ReLU)
+  → Dense(input_dim, Sigmoid)
+  
+  <b>latent_dim = 16:</b>
+  умеренное сжатие для захвата
+  структуры нормальных данных
+  без запоминания (оверфиттинга).
+  
+  <b>Обучение:</b>
+  • loss = MSE (ошибка восстановления)
+  • optimizer = Adam
+  • early stopping по валидации
+  • только на Non-Fraud данных
+end note
+
+' ========= Основные классы =========
+class AETrainer <<User>> {
+  - model: AutoencoderModel
+  - threshold: float
+  - scaler: StandardScaler
+  - model_path: str
+  - input_dim: int
+  - latent_dim: int
+  __
+  + train(input: FraudDetectionInput) : void
+  - filter_non_fraud(input: FraudDetectionInput) : ndarray
+  - compute_threshold(model: AutoencoderModel, X_val: ndarray) : float
+  - save_artifacts() : void
+}
+
+note top of AETrainer
+  <b>Реализация интерфейса Trainer</b>
+  для автокодировщика.
+  
+  <b>Вход:</b> FraudDetectionInput с
+  combined_features и labels.
+  
+  <b>Логика (unsupervised):</b>
+  1. Фильтрует ТОЛЬКО Non-Fraud
+     документы (label=0).
+  2. Разбивает на train/validation
+     (80/20).
+  3. Обучает AutoencoderModel
+     восстанавливать нормальные данные.
+  4. Вычисляет порог аномальности:
+     95-й перцентиль MSE на валидации.
+  5. Сохраняет модель и порог.
+  
+  <b>Почему 95-й перцентиль:</b>
+  ожидается, что ~5% нормальных
+  документов могут иметь повышенную
+  ошибку — это снижает ложные
+  срабатывания.
+end note
+
+class AEProcessor <<User>> {
+  - model: AutoencoderModel
+  - threshold: float
+  - scaler: StandardScaler
+  - model_path: str
+  __
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+  - load_artifacts() : void
+  - compute_anomaly_score(error: float, threshold: float) : float
+}
+
+note top of AEProcessor
+  <b>Реализация интерфейса Processor</b>
+  для автокодировщика.
+  
+  <b>Загружает:</b>
+  • autoencoder_model.h5
+  • anomaly_threshold.json
+  • feature_scaler.pkl
+  
+  <b>Инференс:</b>
+  1. Извлекает combined_features.
+  2. Прогоняет через автоэнкодер.
+  3. Вычисляет MSE восстановления.
+  4. Сравнивает с порогом:
+     если MSE > threshold → аномалия.
+  5. Нормализует anomaly_score
+     в диапазон [0, 1] для
+     сопоставимости с RF.
+  
+  <b>Важно:</b> модель обучалась на
+  Non-Fraud → аномалии (Fraud)
+  восстанавливаются с большей ошибкой.
+end note
+
+class AEInterpreter <<User>> {
+  + interpret(output: FraudDetectionOutput) : Any
+  - plot_reconstruction_error(outputs: List[FraudDetectionOutput]) : void
+  - format_report(report_id: str, anomaly_score: float, error: float, threshold: float) : str
+}
+
+note top of AEInterpreter
+  <b>Реализация интерфейса Interpreter</b>
+  для автокодировщика.
+  
+  <b>Постобработка:</b>
+  1. Визуализация распределения ошибок
+     восстановления (гистограмма).
+  2. Сравнение anomaly_score с порогом.
+  3. Формирование объяснения:
+     ошибка восстановления,
+     превышение порога.
+  
+  <b>Для главы 4:</b> визуализация
+  позволит сравнить разделимость
+  классов методами AE и RF.
+end note
+
+' ========= Наследование =========
+AETrainer .up.|> Trainer : реализует
+AEProcessor .up.|> Processor : реализует
+AEInterpreter .up.|> Interpreter : реализует
+
+' ========= Связи =========
+AETrainer *-- AutoencoderModel : композиция
+AEProcessor *-- AutoencoderModel : композиция
+
+FraudDetectionInput .. AETrainer : <<использует>>
+FraudDetectionInput .. AEProcessor : <<использует>>
+FraudDetectionOutput .. AEProcessor : <<создаёт>>
+FraudDetectionOutput .. AEInterpreter : <<использует>>
+
+@enduml

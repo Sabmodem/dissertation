@@ -1,0 +1,30 @@
+@startuml
+left to right direction
+skinparam actorBackgroundColor LightBlue
+skinparam usecaseBackgroundColor LightYellow
+
+actor "Исследователь" as Dev
+
+rectangle "Использование пайплайнов" {
+  usecase "Настроить TrainPipeline" as UC6
+  usecase "Запустить TrainPipeline" as UC7
+}
+
+rectangle "Точки расширения (используемые)" {
+  usecase "Реализовать Preparator" as UC2
+  usecase "Реализовать Trainer" as UC5
+  usecase "Определить DTO\n(ProcessorInput, ProcessorOutput)" as UC1
+}
+
+Dev --> UC6
+Dev --> UC7
+
+UC6 ..> UC2 : <<включает>>
+UC6 ..> UC5 : <<включает>>
+UC7 ..> UC6 : <<предшествует>>
+
+note right of UC7
+  <b>Результат:</b>
+  файл модели на диске
+end note
+@enduml

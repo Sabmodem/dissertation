@@ -1,0 +1,72 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "ML Developer" as Dev2
+participant "InferencePipeline" as Inf
+participant "Preparator" as Prep2
+participant "Processor" as Proc
+participant "Interpreter" as Interp
+collections "Файловая\nсистема" as FS2
+
+Dev2 -> Inf : run(rawData)
+activate Inf
+
+Inf -> Prep2 : prepare(rawData)
+activate Prep2
+
+note right of Prep2
+  <b>Этап подготовки</b>
+  • Загрузка входных данных
+  • Предобработка (нормализация,
+    токенизация, resize и т.д.)
+  • Формирование ProcessorInput
+end note
+
+Prep2 --> Inf : ProcessorInput
+deactivate Prep2
+
+Inf -> Proc : process(ProcessorInput)
+activate Proc
+
+Proc -> FS2 : загружает модель из файла
+note right of FS2
+  <b>Загрузка модели</b>
+  Из того же файла, что
+  сохранил Trainer на этапе
+  обучения
+end note
+
+Proc -> Proc : инференс
+note right of Proc
+  <b>Инференс</b>
+  • Прямой проход модели
+  • Получение предсказаний
+  • Формирование ProcessorOutput
+end note
+
+Proc --> Inf : ProcessorOutput
+deactivate Proc
+
+Inf -> Interp : interpret(ProcessorOutput)
+activate Interp
+
+Interp -> Interp : постобработка\n(графики, БД, алерты...)
+note right of Interp
+  <b>Интерпретация</b>
+  • Постобработка результатов
+  • Генерация отчётов/графиков
+  • Запись в БД
+  • Отправка алертов
+  • Возврат в бизнес-формате
+end note
+
+Interp --> Inf : Any
+deactivate Interp
+
+Inf --> Dev2 : Any
+deactivate Inf
+
+@enduml

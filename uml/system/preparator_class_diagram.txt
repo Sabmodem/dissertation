@@ -1,0 +1,108 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+' ========= Интерфейс ядра =========
+interface Preparator <<Core>> {
+  + prepare(rawData: Any) : ProcessorInput
+}
+
+note top of Preparator
+  <b>Интерфейс ядра фреймворка</b>
+  Определён в главе 2.
+  Пользователь обязан реализовать.
+end note
+
+' ========= Вспомогательные классы =========
+class LinguisticFeatureExtractor <<Utility>> {
+  + extract(raw_text: str) : dict
+  - compute_word_count(text: str) : int
+  - compute_fog_index(text: str) : float
+  - compute_flesch_reading_ease(text: str) : float
+  - compute_passive_voice_ratio(text: str) : float
+  - compute_sentiment_lm(text: str) : float
+  - compute_uncertainty_ratio(text: str) : float
+}
+
+note right of LinguisticFeatureExtractor
+  <b>Статический утилитный класс</b>
+  Вычисляет лингвистические метрики:
+  • Длина текста (Word Count)
+  • Индекс туманности (Fog Index)
+  • Удобочитаемость (Flesch Reading Ease)
+  • Доля пассивных конструкций
+  • Тональность (Loughran-McDonald)
+  • Доля слов неопределённости
+  
+  <b>Не имеет состояния.</b>
+  Все методы — чистые функции.
+end note
+
+class TextCleaner <<Utility>> {
+  + clean(raw_text: str) : str
+  - remove_html_tags(text: str) : str
+  - remove_headers(text: str) : str
+  - remove_legal_disclaimers(text: str) : str
+  - normalize_whitespace(text: str) : str
+}
+
+note right of TextCleaner
+  <b>Статический утилитный класс</b>
+  Выполняет очистку текста:
+  • Удаление HTML-тегов и заголовков
+  • Удаление юридических оговорок
+  • Нормализация пробелов
+  
+  <b>Важно:</b> НЕ удаляет цифры и
+  НЕ удаляет все стоп-слова —
+  как обосновано в разделе 1.1.5.
+end note
+
+' ========= Основной класс =========
+class TextFraudPreparator <<User>> {
+  - fit_mode: bool
+  - artifact_path: str
+  - tfidf_vectorizer: TfidfVectorizer
+  - feature_scaler: StandardScaler
+  - cleaner: TextCleaner
+  - ling_extractor: LinguisticFeatureExtractor
+  __
+  + prepare(rawData: Any) : FraudDetectionInput
+  - load_artifacts() : void
+  - save_artifacts() : void
+  - extract_tfidf(texts: List[str]) : ndarray
+  - combine_features(tfidf: ndarray, ling: dict) : ndarray
+}
+
+note top of TextFraudPreparator
+  <b>Реализация интерфейса Preparator</b>
+  для текстовой задачи антифрода.
+  
+  <b>fit_mode = True:</b>
+  • Обучает TF-IDF векторизатор
+  • Обучает StandardScaler
+  • Сохраняет артефакты на диск
+  
+  <b>fit_mode = False:</b>
+  • Загружает артефакты с диска
+  • Применяет обученные трансформеры
+  
+  Это реализует рекомендацию главы 2
+  про переиспользование Preparator'а
+  между пайплайнами обучения и инференса.
+end note
+
+' ========= Связи =========
+TextFraudPreparator .up.|> Preparator : реализует
+
+TextFraudPreparator *-- TextCleaner : композиция
+TextFraudPreparator *-- LinguisticFeatureExtractor : композиция
+
+' ========= Связи с DTO =========
+FraudDetectionInput .. TextFraudPreparator : <<создаёт>>
+
+@enduml
