@@ -1,0 +1,74 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+' ========= Интерфейсы ядра (сокращённо) =========
+interface Processor <<Core>> {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter <<Core>> {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+' ========= Основные классы =========
+class RuleBasedFraudProcessor <<User>> {
+  - config: RuleConfig
+  - rules_triggered: dict
+  ..
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+  - check_word_count(ling: dict) : bool
+  - check_fog_index(ling: dict) : bool
+  - check_sentiment(ling: dict) : bool
+  - check_passive_voice(ling: dict) : bool
+  - check_uncertainty(ling: dict) : bool
+  - aggregate_results() : (int, List[str])
+}
+
+note bottom of RuleBasedFraudProcessor
+  <b>Реализация интерфейса Processor</b>
+  для Rule-based детектора.
+  
+  <b>Логика:</b>
+  1. Извлекает linguistic_features
+  2. Проверяет каждое правило
+  3. Если сработало ≥ min_rules_triggered
+     → помечает как Fraud
+  
+  <b>Игнорирует</b> tfidf_features и
+  combined_features.
+end note
+
+class RuleBasedFraudInterpreter <<User>> {
+  + interpret(output: FraudDetectionOutput) : Any
+  ..
+  - format_alert(output: FraudDetectionOutput) : str
+  - log_to_console(report_id: str, rules: List[str]) : void
+}
+
+note bottom of RuleBasedFraudInterpreter
+  <b>Реализация интерфейса Interpreter</b>
+  
+  <b>Постобработка:</b>
+  • Форматирует читаемое объяснение
+  • Логирует в консоль/файл
+  • Возвращает структурированный отчёт
+  
+  <b>Для Production:</b> расширяется
+  отправкой алертов в Telegram/Slack/БД.
+end note
+
+' ========= Наследование =========
+RuleBasedFraudProcessor .up.|> Processor : реализует
+RuleBasedFraudInterpreter .up.|> Interpreter : реализует
+
+' ========= Связи с DTO =========
+FraudDetectionInput .. RuleBasedFraudProcessor : <<использует>>
+FraudDetectionOutput .. RuleBasedFraudProcessor : <<создаёт>>
+FraudDetectionOutput .. RuleBasedFraudInterpreter : <<использует>>
+
+@enduml

@@ -1,0 +1,37 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+interface Trainer <<Core>>
+interface Processor <<Core>>
+interface Interpreter <<Core>>
+
+class AETrainer <<User>>
+class AEProcessor <<User>>
+class AEInterpreter <<User>>
+class AutoencoderModel <<Model>>
+
+AETrainer .up.|> Trainer
+AEProcessor .up.|> Processor
+AEInterpreter .up.|> Interpreter
+
+AETrainer *-- AutoencoderModel
+AEProcessor *-- AutoencoderModel
+
+FraudDetectionInput .. AETrainer
+FraudDetectionInput .. AEProcessor
+FraudDetectionOutput .. AEProcessor
+FraudDetectionOutput .. AEInterpreter
+
+note bottom of AutoencoderModel
+  Input → Dense(128) → Dense(64)
+  → Dense(16) → Dense(64)
+  → Dense(128) → Dense(input_dim)
+  latent_dim=16, loss=MSE, Adam
+end note
+
+@enduml

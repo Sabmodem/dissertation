@@ -1,0 +1,48 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро (Core)" as Core {
+  interface "Processor" as ProcI
+  interface "Interpreter" as InterpI
+  interface "Trainer" as TrainI
+}
+
+package "Пользовательские реализации" as User {
+  package "Autoencoder модуль" as AEMod {
+    component "AETrainer" as AETrain
+    component "AEProcessor" as AEProc
+    component "AEInterpreter" as AEInterp
+    component "AutoencoderModel" as AEModel
+  }
+}
+
+package "Внешние интерфейсы" as Ext {
+  component "Model Storage\n(.joblib, .h5, .pkl, .json)" as ModelStore
+  database "Output Targets\n(БД, алерты, графики)" as OutTargets
+  component "Rule Config\n(.json/.yaml)" as RuleConf
+}
+
+AETrain .up.|> TrainI : реализует
+AEProc .up.|> ProcI : реализует
+AEInterp .up.|> InterpI : реализует
+AETrain *-- AEModel : композиция
+AEProc *-- AEModel : композиция
+
+AETrain ..> ModelStore : <<сохраняет>>
+AEProc ..> ModelStore : <<загружает>>
+AEInterp ..> OutTargets : <<записывает>>
+
+note bottom of Ext
+  <b>Внешние зависимости</b>
+  под контролем разработчика.
+  Фреймворк не диктует формат
+  файлов, тип БД, визуализацию.
+end note
+
+@enduml

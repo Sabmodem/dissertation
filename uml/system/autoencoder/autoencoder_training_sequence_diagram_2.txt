@@ -1,0 +1,73 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "TrainPipeline" as Train
+participant "AETrainer" as AETrain
+collections "Файловая\nсистема" as FS
+
+Train -> AETrain : train(FraudDetectionInput)
+activate AETrain
+
+AETrain -> AETrain : filter_non_fraud()\nоставляет только label=0
+
+note right of AETrain
+  <b>Фильтрация Non-Fraud</b>
+  Автокодировщик обучается только
+  на нормальных данных —
+  это принципиально для
+  unsupervised anomaly detection.
+end note
+
+AETrain -> AETrain : split train/validation\n(80/20)
+
+AETrain -> AETrain : построение архитектуры\nAutoencoderModel
+
+note right of AETrain
+  <b>Архитектура автоэнкодера:</b>
+  Input(input_dim) → Dense(128, ReLU)
+  → Dense(64, ReLU) → Dense(16, ReLU)
+  → Dense(64, ReLU) → Dense(128, ReLU)
+  → Dense(input_dim, Sigmoid)
+  
+  <b>Обучение:</b>
+  • loss = MSE, optimizer = Adam(lr=0.001)
+  • batch_size = 32, epochs ≤ 100
+  • early stopping (patience = 10 эпох)
+end note
+
+AETrain -> AETrain : обучение на train\nс валидацией на validation
+
+AETrain -> AETrain : compute_threshold()\n95-й перцентиль MSE\nна validation Non-Fraud
+
+note right of AETrain
+  <b>Вычисление порога:</b>
+  MSE восстановления для валидации.
+  Порог = 95-й перцентиль распределения.
+  95% нормальных — ниже порога,
+  5% — выше (допустимые false positives).
+end note
+
+AETrain -> FS : сохраняет артефакты\n• autoencoder_model.h5\n• anomaly_threshold.json
+
+note right of FS
+  <b>Сохраняемые артефакты:</b>
+  • autoencoder_model.h5 — веса модели
+  • anomaly_threshold.json — порог
+  
+  TfidfVectorizer и Scaler уже
+  сохранены Preparator'ом.
+  
+  <b>Для инференса потребуются</b>
+  все три файла + артефакты Preparator'а.
+end note
+
+deactivate AETrain
+
+Train --> Dev : void
+deactivate Train
+
+@enduml

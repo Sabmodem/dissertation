@@ -1,0 +1,37 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "TrainPipeline" as Train
+participant "TextFraudPreparator" as Prep
+collections "Файловая\nсистема" as FS
+
+Dev -> Train : run(rawData)
+activate Train
+
+Train -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>fit_mode = True</b>
+  • Очистка текста
+  • Извлечение лингвистических признаков
+  • Обучение TfidfVectorizer и Scaler
+  • Формирование combined_features
+  
+  <b>Важно:</b> Preparator НЕ фильтрует
+  Non-Fraud — возвращает все документы.
+  Фильтрацию выполнит AETrainer.
+  Так достигается переиспользование
+  Preparator'а между RF и AE.
+end note
+
+Prep -> FS : сохраняет артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Train : List[FraudDetectionInput]\n(все документы, с метками)
+deactivate Prep
+
+@enduml

@@ -1,0 +1,52 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "InferencePipeline" as Inf
+participant "TextFraudPreparator" as Prep
+participant "RFProcessor" as RFProc
+collections "Файловая\nсистема" as FS
+
+Dev -> Inf : run(rawData)
+activate Inf
+
+Inf -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>fit_mode = False</b>
+  Загружает TfidfVectorizer и Scaler
+  с диска, применяет к новым данным.
+end note
+
+Prep -> FS : загружает артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Inf : List[FraudDetectionInput]\n(combined_features)
+deactivate Prep
+
+loop для каждого FraudDetectionInput
+
+  Inf -> RFProc : process(FraudDetectionInput)
+  activate RFProc
+
+  RFProc -> FS : загружает артефакты\n(rf_model.joblib, tfidf_vectorizer.pkl,\nfeature_scaler.pkl, feature_names.json)
+
+  note right of RFProc
+    <b>Инференс RF</b>
+    1. Извлекает combined_features
+    2. model.predict_proba() → вероятность fraud
+    3. model.predict() → метка класса
+    4. Формирует FraudDetectionOutput:
+       prediction, fraud_probability,
+       method_name = "RandomForest"
+  end note
+
+  RFProc --> Inf : FraudDetectionOutput
+  deactivate RFProc
+
+end
+
+@enduml

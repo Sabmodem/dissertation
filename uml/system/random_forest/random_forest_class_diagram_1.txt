@@ -1,0 +1,51 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+interface Trainer <<Core>> {
+  + train(input: ProcessorInput) : void
+}
+
+class RFTrainer <<User>> {
+  - model: RandomForestClassifier
+  - tfidf_vectorizer: TfidfVectorizer
+  - feature_scaler: StandardScaler
+  - feature_names: List[str]
+  - model_path: str
+  ..
+  + train(input: FraudDetectionInput) : void
+  - perform_grid_search(X: ndarray, y: ndarray) : RandomForestClassifier
+  - save_artifacts() : void
+}
+
+note bottom of RFTrainer
+  <b>Реализация интерфейса Trainer</b>
+  
+  <b>Вход:</b> FraudDetectionInput с
+  combined_features и labels.
+  
+  <b>Обучение:</b>
+  1. Извлекает X (combined_features) и y (labels)
+  2. RandomizedSearchCV по сетке:
+     n_estimators: {100, 200, 500}
+     max_depth: {10, 20, None}
+     min_samples_split: {2, 5, 10}
+     class_weight: {balanced, None}
+  3. StratifiedKFold (5 фолдов)
+  4. Метрика: F1-score (баланс Precision/Recall)
+  
+  <b>Сохраняет:</b>
+  • rf_model.joblib
+  • tfidf_vectorizer.pkl
+  • feature_scaler.pkl
+  • feature_names.json
+end note
+
+RFTrainer .up.|> Trainer : реализует
+FraudDetectionInput .. RFTrainer : <<использует>>
+
+@enduml

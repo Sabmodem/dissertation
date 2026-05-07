@@ -1,0 +1,37 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "TrainPipeline" as Train
+participant "TextFraudPreparator" as Prep
+collections "Файловая\nсистема" as FS
+
+Dev -> Train : run(rawData)
+activate Train
+
+Train -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>fit_mode = True</b>
+  1. Очистка текста
+  2. Извлечение лингвистических признаков
+  3. Обучение TfidfVectorizer на корпусе
+  4. Обучение StandardScaler
+  5. Формирование combined_features
+  6. Сохранение артефактов на диск
+  
+  Возвращает FraudDetectionInput с:
+  • combined_features (X)
+  • label (y)
+end note
+
+Prep -> FS : сохраняет артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Train : List[FraudDetectionInput]\n(combined_features + labels)
+deactivate Prep
+
+@enduml

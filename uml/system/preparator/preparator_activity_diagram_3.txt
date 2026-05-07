@@ -1,0 +1,28 @@
+@startuml
+!theme plain
+skinparam activityBackgroundColor LightYellow
+skinparam activityBorderColor DarkSlateGray
+skinparam activityDiamondBackgroundColor LightCyan
+
+start
+
+:Получены нормализованные\ncombined_features для всех документов;
+
+:Создать FraudDetectionInput\nдля каждого документа;
+
+note right
+  <b>Поля FraudDetectionInput:</b>
+  • raw_text — очищенный текст
+  • report_id — идентификатор
+  • label — метка (если есть)
+  • tfidf_features — вектор TF-IDF
+  • linguistic_features — словарь метрик
+  • combined_features — нормализованный вектор
+  
+  <b>При инференсе</b> поле label = None.
+end note
+
+:Вернуть список FraudDetectionInput;
+
+stop
+@enduml

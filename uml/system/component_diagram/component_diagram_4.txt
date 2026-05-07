@@ -1,0 +1,43 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро (Core)" as Core {
+  interface "Processor" as ProcI
+  interface "Interpreter" as InterpI
+  interface "Trainer" as TrainI
+}
+
+package "Пользовательские реализации" as User {
+  package "Rule-based модуль" as RuleMod {
+    component "RuleBasedFraudProcessor" as RBProc
+    component "RuleBasedFraudInterpreter" as RBInterp
+    component "RuleConfig" as RC
+  }
+  package "Random Forest модуль" as RFMod {
+    component "RFTrainer" as RFTrain
+    component "RFProcessor" as RFProc
+    component "RFInterpreter" as RFInterp
+  }
+}
+
+RBProc .up.|> ProcI : реализует
+RBInterp .up.|> InterpI : реализует
+RBProc *-- RC : композиция
+
+RFTrain .up.|> TrainI : реализует
+RFProc .up.|> ProcI : реализует
+RFInterp .up.|> InterpI : реализует
+
+note top of User
+  <b>Две парадигмы:</b>
+  правила и supervised (RF).
+  Три интерфейса ядра реализованы.
+end note
+
+@enduml

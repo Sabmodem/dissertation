@@ -1,0 +1,33 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "InferencePipeline" as Inf
+participant "TextFraudPreparator" as Prep
+collections "Файловая\nсистема" as FS
+
+Dev -> Inf : run(rawData)
+activate Inf
+
+Inf -> Prep : prepare(rawData)
+activate Prep
+
+note right of Prep
+  <b>Этап подготовки (fit_mode = False)</b>
+  • Загружает TF-IDF и Scaler с диска
+  • Для Rule-based TF-IDF вычисляется,
+    но НЕ используется процессором
+  • linguistic_features извлекаются
+    в полном объёме
+  • Возвращает список FraudDetectionInput
+end note
+
+Prep -> FS : загружает артефакты\n(TfidfVectorizer, StandardScaler)
+
+Prep --> Inf : List[FraudDetectionInput]
+deactivate Prep
+
+@enduml

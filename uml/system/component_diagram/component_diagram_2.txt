@@ -1,0 +1,36 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро фреймворка (Core)" as Core {
+  
+  package "Интерфейсы этапов" as Interfaces {
+    interface "Preparator" as PrepI
+    interface "Processor" as ProcI
+    interface "Interpreter" as InterpI
+    interface "Trainer" as TrainI
+  }
+  
+  package "Пайплайны" as Pipelines {
+    component "TrainPipeline" as TrainP
+    component "InferencePipeline" as InfP
+  }
+}
+
+TrainP .. PrepI : <<requires>>
+TrainP .. TrainI : <<requires>>
+InfP .. PrepI : <<requires>>
+InfP .. ProcI : <<requires>>
+InfP .. InterpI : <<requires>>
+
+note bottom of Pipelines
+  <b>TrainPipeline:</b> подготовка → обучение
+  <b>InferencePipeline:</b> подготовка → процессинг → интерпретация
+end note
+
+@enduml

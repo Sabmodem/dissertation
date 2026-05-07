@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро фреймворка (Core)" as Core {
+  
+  package "Контракты данных (DTO)" as DTO {
+    component "ProcessorInput\n(abstract)" as PI
+    component "ProcessorOutput\n(abstract)" as PO
+  }
+  
+  package "Интерфейсы этапов" as Interfaces {
+    interface "Preparator" as PrepI
+    interface "Processor" as ProcI
+    interface "Interpreter" as InterpI
+    interface "Trainer" as TrainI
+  }
+}
+
+' Связи
+PrepI ..> PI : <<создаёт>>
+ProcI ..> PI : <<использует>>
+ProcI ..> PO : <<создаёт>>
+TrainI ..> PI : <<использует>>
+InterpI ..> PO : <<использует>>
+
+note top of Core
+  <b>Ядро фреймворка — неизменяемо</b>
+  Абстрактные контракты и интерфейсы.
+  Не зависит от предметной области.
+end note
+
+@enduml

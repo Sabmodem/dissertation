@@ -1,0 +1,44 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+interface Interpreter <<Core>> {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+class RFInterpreter <<User>> {
+  - shap_explainer: shap.TreeExplainer
+  ..
+  + interpret(output: FraudDetectionOutput) : Any
+  - compute_shap_values(input: FraudDetectionInput, output: FraudDetectionOutput) : dict
+  - format_report(report_id: str, probability: float, shap_values: dict) : str
+}
+
+note bottom of RFInterpreter
+  <b>Реализация интерфейса Interpreter</b>
+  
+  <b>Постобработка (XAI):</b>
+  1. Вычисляет SHAP-значения
+     (TreeExplainer — быстро для деревьев)
+  2. Извлекает топ-K влиятельных признаков
+  3. Формирует объяснение:
+     какие признаки и в какую сторону
+     повлияли на решение
+  
+  <b>Принимает оба DTO:</b>
+  • FraudDetectionOutput — результат
+  • FraudDetectionInput — признаки для SHAP
+  
+  <b>В Production:</b> объяснения сохраняются
+  в БД для аудита (требование XAI из гл. 1-2).
+end note
+
+RFInterpreter .up.|> Interpreter : реализует
+FraudDetectionOutput .. RFInterpreter : <<использует>>
+FraudDetectionInput .. RFInterpreter : <<использует>>
+
+@enduml

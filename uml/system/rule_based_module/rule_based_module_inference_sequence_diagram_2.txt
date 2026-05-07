@@ -1,0 +1,53 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "InferencePipeline" as Inf
+participant "RuleBasedFraudProcessor" as RProc
+participant "RuleBasedFraudInterpreter" as RInterp
+
+Inf -> Inf : получен List[FraudDetectionInput]\n(от Preparator)
+
+loop для каждого FraudDetectionInput
+
+  Inf -> RProc : process(FraudDetectionInput)
+  activate RProc
+
+  note right of RProc
+    <b>Rule-based инференс</b>
+    1. Извлекает linguistic_features
+    2. Проверяет правила:
+       Word Count, Fog Index, Sentiment,
+       Passive Voice, Uncertainty
+    3. Если сработало ≥ min_rules_triggered
+       → prediction = 1 (Fraud)
+    4. Формирует FraudDetectionOutput
+       с method_name = "RuleBased"
+       и списком сработавших правил
+  end note
+
+  RProc --> Inf : FraudDetectionOutput
+  deactivate RProc
+
+  Inf -> RInterp : interpret(FraudDetectionOutput)
+  activate RInterp
+
+  note right of RInterp
+    <b>Интерпретация</b>
+    • Форматирует объяснение
+    • Логирует в консоль/файл
+    • Возвращает отчёт
+  end note
+
+  RInterp --> Inf : Any (отчёт)
+  deactivate RInterp
+
+end
+
+Inf --> Dev : Any (сводный результат)
+deactivate Inf
+
+@enduml

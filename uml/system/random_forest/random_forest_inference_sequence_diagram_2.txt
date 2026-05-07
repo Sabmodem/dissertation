@@ -1,0 +1,36 @@
+@startuml
+!theme plain
+skinparam participantBackgroundColor LightYellow
+skinparam participantBorderColor DarkSlateGray
+skinparam sequenceArrowColor DarkSlateGray
+
+actor "Исследователь" as Dev
+participant "InferencePipeline" as Inf
+participant "RFInterpreter" as RFInterp
+
+Inf -> Inf : получены FraudDetectionOutput\nдля всех документов
+
+loop для каждого FraudDetectionInput\nи FraudDetectionOutput
+
+  Inf -> RFInterp : interpret(FraudDetectionInput,\nFraudDetectionOutput)
+  activate RFInterp
+
+  note right of RFInterp
+    <b>SHAP-интерпретация</b>
+    1. Вычисляет SHAP-значения (TreeExplainer)
+    2. Извлекает топ-K признаков
+    3. Формирует explanation:
+       {"feature_name": shap_value, ...}
+    4. Обогащает FraudDetectionOutput
+    5. Форматирует читаемый отчёт
+  end note
+
+  RFInterp --> Inf : отчёт с SHAP-объяснениями
+  deactivate RFInterp
+
+end
+
+Inf --> Dev : сводный результат
+deactivate Inf
+
+@enduml

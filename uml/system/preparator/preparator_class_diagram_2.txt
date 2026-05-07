@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+' ========= Интерфейс ядра (повтор для связей) =========
+interface Preparator <<Core>> {
+  + prepare(rawData: Any) : ProcessorInput
+}
+
+' ========= Основной класс =========
+class TextFraudPreparator <<User>> {
+  - fit_mode: bool
+  - artifact_path: str
+  - tfidf_vectorizer: TfidfVectorizer
+  - feature_scaler: StandardScaler
+  - cleaner: TextCleaner
+  - ling_extractor: LinguisticFeatureExtractor
+  ..
+  + prepare(rawData: Any) : FraudDetectionInput
+  - load_artifacts() : void
+  - save_artifacts() : void
+  - extract_tfidf(texts: List[str]) : ndarray
+  - combine_features(tfidf: ndarray, ling: dict) : ndarray
+}
+
+note bottom of TextFraudPreparator
+  <b>Реализация интерфейса Preparator</b>
+  для текстовой задачи антифрода.
+  
+  <b>fit_mode = True:</b>
+  • Обучает TF-IDF векторизатор
+  • Обучает StandardScaler
+  • Сохраняет артефакты на диск
+  
+  <b>fit_mode = False:</b>
+  • Загружает артефакты с диска
+  • Применяет обученные трансформеры
+  
+  Это реализует рекомендацию главы 2
+  про переиспользование Preparator'а
+  между пайплайнами обучения и инференса.
+end note
+
+class TextCleaner <<Utility>> {
+  + clean(raw_text: str) : str
+}
+
+class LinguisticFeatureExtractor <<Utility>> {
+  + extract(raw_text: str) : dict
+}
+
+' ========= Связи =========
+TextFraudPreparator .up.|> Preparator : реализует
+TextFraudPreparator *-- TextCleaner : композиция
+TextFraudPreparator *-- LinguisticFeatureExtractor : композиция
+
+@enduml

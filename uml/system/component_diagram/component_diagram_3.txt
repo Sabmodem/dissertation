@@ -1,0 +1,40 @@
+@startuml
+!theme plain
+skinparam componentBackgroundColor LightYellow
+skinparam componentBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+skinparam packageBackgroundColor White
+skinparam packageBorderColor DarkSlateGray
+
+package "Ядро (Core)" as Core {
+  component "ProcessorInput\n(abstract)" as PI
+  component "ProcessorOutput\n(abstract)" as PO
+  interface "Preparator" as PrepI
+}
+
+package "Пользовательские реализации" as User {
+  package "DTO" as UserDTO {
+    component "FraudDetectionInput" as FDI
+    component "FraudDetectionOutput" as FDO
+  }
+  package "Preparator" as UserPrep {
+    component "TextFraudPreparator" as TFP
+    component "TextCleaner" as TC
+    component "LinguisticFeatureExtractor" as LFE
+  }
+}
+
+FDI --|> PI : расширяет
+FDO --|> PO : расширяет
+TFP .up.|> PrepI : реализует
+TFP *-- TC : композиция
+TFP *-- LFE : композиция
+
+note top of User
+  <b>Один Preparator</b> обслуживает
+  три метода — технологическая
+  нейтральность фреймворка.
+end note
+
+@enduml

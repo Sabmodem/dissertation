@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+' ========= Интерфейсы ядра =========
+interface Processor <<Core>> {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter <<Core>> {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+' ========= Конфигурация правил =========
+class RuleConfig <<DTO>> {
+  + word_count_threshold: int
+  + fog_index_threshold: float
+  + sentiment_threshold: float
+  + passive_voice_threshold: float
+  + uncertainty_threshold: float
+  + min_rules_triggered: int
+}
+
+note right of RuleConfig
+  <b>Конфигурация порогов правил</b>
+  Загружается из JSON/YAML файла
+  в конструкторе RuleBasedFraudProcessor.
+  
+  <b>min_rules_triggered:</b>
+  минимальное количество сработавших
+  правил для классификации документа
+  как мошеннического (агрегация).
+end note
+
+@enduml

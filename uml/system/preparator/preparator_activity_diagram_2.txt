@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+skinparam activityBackgroundColor LightYellow
+skinparam activityBorderColor DarkSlateGray
+skinparam activityDiamondBackgroundColor LightCyan
+
+start
+
+:Обработка очередного\nочищенного документа;
+
+partition "Извлечение лингвистических признаков" {
+  :Вычисление Word Count;
+  :Вычисление Fog Index;
+  :Вычисление Flesch Reading Ease;
+  :Вычисление доли пассивных конструкций;
+  :Вычисление тональности\n(словарь Loughran-McDonald);
+  :Вычисление доли слов неопределённости;
+  :Формирование словаря\nlinguistic_features;
+}
+
+:Все документы обработаны;
+
+if (fit_mode?) then (<b>True: Обучение</b>)
+  :Обучить TfidfVectorizer\nна корпусе текстов;
+  :Трансформировать корпус →\nматрица TF-IDF;
+  :Объединить TF-IDF\nи лингвистические признаки\nв combined_features;
+  :Обучить StandardScaler\nна combined_features;
+  :Нормализовать\ncombined_features;
+  :Сохранить артефакты:\n• tfidf_vectorizer.pkl\n• feature_scaler.pkl;
+else (<b>False: Инференс</b>)
+  :Загрузить артефакты\nс диска;
+  :Трансформировать корпус\nобученным TfidfVectorizer'ом;
+  :Объединить TF-IDF\nи лингвистические признаки\nв combined_features;
+  :Нормализовать\nзагруженным Scaler'ом;
+endif
+
+stop
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+!theme plain
+skinparam activityBackgroundColor LightYellow
+skinparam activityBorderColor DarkSlateGray
+skinparam activityDiamondBackgroundColor LightCyan
+
+start
+
+:Вход: rawData — список CSV-строк\nили DataFrame с полями\n"Fillings" (текст MD&A) и "Fraud" (метка);
+
+:Извлечение текстов и меток\nиз rawData;
+
+:Поочерёдная обработка каждого документа;
+
+partition "Очистка текста (TextCleaner)" {
+  :Удаление HTML-тегов\n(remove_html_tags);
+  :Удаление служебных заголовков\n(remove_headers);
+  :Удаление юридических оговорок\n(remove_legal_disclaimers);
+  :Нормализация пробелов\n(normalize_whitespace);
+}
+
+note right
+  <b>Важно:</b> цифры НЕ удаляются.
+  Стоп-слова удаляются выборочно —
+  юридические термины сохраняются.
+end note
+
+:Накопление очищенных текстов\nв список;
+
+stop
+@enduml

@@ -1,0 +1,78 @@
+@startuml
+!theme plain
+skinparam classBackgroundColor LightYellow
+skinparam classBorderColor DarkSlateGray
+skinparam interfaceBackgroundColor LightCyan
+skinparam interfaceBorderColor SteelBlue
+left to right direction
+
+interface Processor <<Core>> {
+  + process(input: ProcessorInput) : ProcessorOutput
+}
+
+interface Interpreter <<Core>> {
+  + interpret(output: ProcessorOutput) : Any
+}
+
+class AutoencoderModel <<Model>> {
+  + call(inputs: Tensor) : Tensor
+  + get_reconstruction_error(inputs: Tensor) : float
+}
+
+class AEProcessor <<User>> {
+  - model: AutoencoderModel
+  - threshold: float
+  - scaler: StandardScaler
+  - model_path: str
+  ..
+  + process(input: FraudDetectionInput) : FraudDetectionOutput
+  - load_artifacts() : void
+  - compute_anomaly_score(error: float, threshold: float) : float
+}
+
+note bottom of AEProcessor
+  <b>Реализация интерфейса Processor</b>
+  
+  <b>Загружает:</b>
+  • autoencoder_model.h5
+  • anomaly_threshold.json
+  • feature_scaler.pkl
+  
+  <b>Инференс:</b>
+  1. Извлекает combined_features
+  2. Прогоняет через автоэнкодер
+  3. Вычисляет MSE восстановления
+  4. Если MSE > threshold → аномалия
+  5. Нормализует anomaly_score в [0, 1]
+  
+  <b>Модель обучена на Non-Fraud</b> →
+  аномалии восстанавливаются хуже
+end note
+
+class AEInterpreter <<User>> {
+  + interpret(output: FraudDetectionOutput) : Any
+  ..
+  - plot_reconstruction_error(outputs: List[FraudDetectionOutput]) : void
+  - format_report(report_id: str, anomaly_score: float, error: float, threshold: float) : str
+}
+
+note bottom of AEInterpreter
+  <b>Реализация интерфейса Interpreter</b>
+  
+  1. Гистограмма распределения ошибок
+  2. Сравнение anomaly_score с порогом
+  3. Объяснение: ошибка восстановления,
+     превышение порога
+  
+  <b>Для главы 4:</b> визуализация
+  разделимости классов AE и RF
+end note
+
+AEProcessor .up.|> Processor : реализует
+AEInterpreter .up.|> Interpreter : реализует
+AEProcessor *-- AutoencoderModel : композиция
+FraudDetectionInput .. AEProcessor : <<использует>>
+FraudDetectionOutput .. AEProcessor : <<создаёт>>
+FraudDetectionOutput .. AEInterpreter : <<использует>>
+
+@enduml
