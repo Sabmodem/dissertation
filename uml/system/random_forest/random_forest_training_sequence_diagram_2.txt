@@ -13,7 +13,7 @@ Train -> RFTrain : train(List<FraudDetectionInput>)
 activate RFTrain
 
 note right of RFTrain
-  <b>Обучение RF</b>
+  <b>Обучение Random Forest</b>
   Получает список всех документов.
   
   1. Извлекает X = combined_features, y = labels
@@ -42,15 +42,17 @@ note right of FS
   • feature_names.json — имена признаков
     для SHAP-интерпретации
   
-  TfidfVectorizer и Scaler уже сохранены
-  Preparator'ом.
+  TfidfVectorizer и StandardScaler уже
+  сохранены Preparator'ом (на этапе подготовки).
   
-  <b>Для инференса потребуются</b>
-  все четыре файла:
-  • rf_model.joblib
-  • tfidf_vectorizer.pkl
-  • feature_scaler.pkl
-  • feature_names.json
+  <b>Для инференса потребуются:</b>
+  • Preparator загружает: tfidf_vectorizer.pkl, feature_scaler.pkl
+  • RFProcessor загружает: rf_model.joblib, feature_names.json
+  
+  Таким образом, RFProcessor НЕ работает
+  с векторизатором и скалером, получая
+  уже нормализованные combined_features
+  из FraudDetectionInput.
 end note
 
 deactivate RFTrain

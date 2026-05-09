@@ -33,7 +33,7 @@ deactivate Prep
 Inf -> RFProc : process(List<FraudDetectionInput>)
 activate RFProc
 
-RFProc -> FS : загружает артефакты ОДИН раз\n(rf_model.joblib, tfidf_vectorizer.pkl,\nfeature_scaler.pkl, feature_names.json)
+RFProc -> FS : загружает артефакты ОДИН раз\n(rf_model.joblib, feature_names.json)
 
 note right of RFProc
   <b>Инференс RF</b>

@@ -14,17 +14,15 @@ Inf -> RFInterp : interpret(List<FraudDetectionOutput>)
 activate RFInterp
 
 note right of RFInterp
-  <b>SHAP-интерпретация (агрегированная)</b>
+  <b>Агрегированная SHAP-интерпретация</b>
   
-  Получает ВСЕ результаты сразу.
+  Получает ВСЕ результаты сразу,
+  каждый FraudDetectionOutput уже содержит
+  готовые shap_values (вычислены в RFProcessor).
   
-  Для каждого FraudDetectionOutput:
-  1. Вычисляет SHAP-значения (TreeExplainer)
-  2. Извлекает топ-K признаков
-  3. Формирует explanation:
-     {"feature_name": shap_value, ...}
-  4. Обогащает FraudDetectionOutput
-  5. Форматирует читаемый отчёт
+  Для каждого результата:
+  1. Извлекает shap_values из FraudDetectionOutput
+  2. Форматирует читаемый отчёт (format_report)
   
   <b>Агрегированная аналитика:</b>
   • Сводная статистика по всем документам
@@ -32,7 +30,11 @@ note right of RFInterp
   • Общие top-K признаки по всему набору
   • Сравнительный анализ результатов
   • Визуализация: summary plot, bar plot
-    для глобальной важности признаков
+    на основе агрегированных shap_values
+  
+  Интерпретатор НЕ вычисляет SHAP —
+  он только агрегирует и визуализирует
+  уже готовые значения.
 end note
 
 RFInterp --> Inf : сводный отчёт + агрегированная аналитика

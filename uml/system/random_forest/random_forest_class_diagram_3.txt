@@ -11,10 +11,8 @@ interface Interpreter <<Core>> {
 }
 
 class RFInterpreter <<User>> {
-  - shap_explainer: shap.TreeExplainer
   ..
   + interpret(output: List<FraudDetectionOutput>) : Any
-  - compute_shap_values(input: FraudDetectionInput, output: FraudDetectionOutput) : dict
   - format_report(report_id: str, probability: float, shap_values: dict) : str
 }
 
@@ -24,32 +22,23 @@ note bottom of RFInterpreter
   <b>Получает:</b> List<FraudDetectionOutput>
   (все результаты инференса сразу)
   
-  <b>Постобработка (XAI) для каждого результата:</b>
-  1. Вычисляет SHAP-значения
-     (TreeExplainer — быстро для деревьев)
-  2. Извлекает топ-K влиятельных признаков
-  3. Формирует объяснение:
-     какие признаки и в какую сторону
-     повлияли на решение
-  
   <b>Агрегированная интерпретация:</b>
   • Сводная статистика по всем документам
   • Распределение fraud_probability
   • Общие top-K признаки по всему набору
   • Сравнительный анализ результатов
-  
-  <b>Принимает оба DTO:</b>
-  • FraudDetectionOutput — результат
-  • FraudDetectionInput — признаки для SHAP
-  (входные данные доступны через
-  атрибуты FraudDetectionOutput)
-  
+
+  Получает список FraudDetectionOutput с уже
+  вычисленными SHAP-значениями.
+  Агрегирует: топ общих признаков, распределение
+  влияний, форматирует читаемые отчёты.
+  Не нуждается в исходных признаках.
+
   <b>В Production:</b> объяснения сохраняются
   в БД для аудита (требование XAI из гл. 1-2).
 end note
 
 RFInterpreter .up.|> Interpreter : реализует
 FraudDetectionOutput .. RFInterpreter : <<использует список>>
-FraudDetectionInput .. RFInterpreter : <<использует>>
 
 @enduml

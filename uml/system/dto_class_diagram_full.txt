@@ -43,6 +43,7 @@ class FraudDetectionOutput <<DTO, User>> {
   + anomaly_score: float (optional)
   + method_name: str
   + explanation: dict (optional)
+  + shap_values: dict (optional)
 }
 
 ' ========= Наследование =========
