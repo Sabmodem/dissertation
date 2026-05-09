@@ -7,13 +7,13 @@ skinparam interfaceBorderColor SteelBlue
 left to right direction
 
 interface Interpreter <<Core>> {
-  + interpret(output: ProcessorOutput) : Any
+  + interpret(output: List<ProcessorOutput>) : Any
 }
 
 class RFInterpreter <<User>> {
   - shap_explainer: shap.TreeExplainer
   ..
-  + interpret(output: FraudDetectionOutput) : Any
+  + interpret(output: List<FraudDetectionOutput>) : Any
   - compute_shap_values(input: FraudDetectionInput, output: FraudDetectionOutput) : dict
   - format_report(report_id: str, probability: float, shap_values: dict) : str
 }
@@ -21,7 +21,10 @@ class RFInterpreter <<User>> {
 note bottom of RFInterpreter
   <b>Реализация интерфейса Interpreter</b>
   
-  <b>Постобработка (XAI):</b>
+  <b>Получает:</b> List<FraudDetectionOutput>
+  (все результаты инференса сразу)
+  
+  <b>Постобработка (XAI) для каждого результата:</b>
   1. Вычисляет SHAP-значения
      (TreeExplainer — быстро для деревьев)
   2. Извлекает топ-K влиятельных признаков
@@ -29,16 +32,24 @@ note bottom of RFInterpreter
      какие признаки и в какую сторону
      повлияли на решение
   
+  <b>Агрегированная интерпретация:</b>
+  • Сводная статистика по всем документам
+  • Распределение fraud_probability
+  • Общие top-K признаки по всему набору
+  • Сравнительный анализ результатов
+  
   <b>Принимает оба DTO:</b>
   • FraudDetectionOutput — результат
   • FraudDetectionInput — признаки для SHAP
+  (входные данные доступны через
+  атрибуты FraudDetectionOutput)
   
   <b>В Production:</b> объяснения сохраняются
   в БД для аудита (требование XAI из гл. 1-2).
 end note
 
 RFInterpreter .up.|> Interpreter : реализует
-FraudDetectionOutput .. RFInterpreter : <<использует>>
+FraudDetectionOutput .. RFInterpreter : <<использует список>>
 FraudDetectionInput .. RFInterpreter : <<использует>>
 
 @enduml

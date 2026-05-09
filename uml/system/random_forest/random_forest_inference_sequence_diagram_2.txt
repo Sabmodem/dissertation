@@ -8,29 +8,37 @@ actor "Исследователь" as Dev
 participant "InferencePipeline" as Inf
 participant "RFInterpreter" as RFInterp
 
-Inf -> Inf : получены FraudDetectionOutput\nдля всех документов
+Inf -> Inf : получен List<FraudDetectionOutput>\nдля всех документов
 
-loop для каждого FraudDetectionInput\nи FraudDetectionOutput
+Inf -> RFInterp : interpret(List<FraudDetectionOutput>)
+activate RFInterp
 
-  Inf -> RFInterp : interpret(FraudDetectionInput,\nFraudDetectionOutput)
-  activate RFInterp
+note right of RFInterp
+  <b>SHAP-интерпретация (агрегированная)</b>
+  
+  Получает ВСЕ результаты сразу.
+  
+  Для каждого FraudDetectionOutput:
+  1. Вычисляет SHAP-значения (TreeExplainer)
+  2. Извлекает топ-K признаков
+  3. Формирует explanation:
+     {"feature_name": shap_value, ...}
+  4. Обогащает FraudDetectionOutput
+  5. Форматирует читаемый отчёт
+  
+  <b>Агрегированная аналитика:</b>
+  • Сводная статистика по всем документам
+  • Распределение fraud_probability
+  • Общие top-K признаки по всему набору
+  • Сравнительный анализ результатов
+  • Визуализация: summary plot, bar plot
+    для глобальной важности признаков
+end note
 
-  note right of RFInterp
-    <b>SHAP-интерпретация</b>
-    1. Вычисляет SHAP-значения (TreeExplainer)
-    2. Извлекает топ-K признаков
-    3. Формирует explanation:
-       {"feature_name": shap_value, ...}
-    4. Обогащает FraudDetectionOutput
-    5. Форматирует читаемый отчёт
-  end note
+RFInterp --> Inf : сводный отчёт + агрегированная аналитика
+deactivate RFInterp
 
-  RFInterp --> Inf : отчёт с SHAP-объяснениями
-  deactivate RFInterp
-
-end
-
-Inf --> Dev : сводный результат
+Inf --> Dev : Any (сводный результат с аналитикой)
 deactivate Inf
 
 @enduml

@@ -9,12 +9,15 @@ participant "TrainPipeline" as Train
 participant "RFTrainer" as RFTrain
 collections "Файловая\nсистема" as FS
 
-Train -> RFTrain : train(FraudDetectionInput)
+Train -> RFTrain : train(List<FraudDetectionInput>)
 activate RFTrain
 
 note right of RFTrain
   <b>Обучение RF</b>
+  Получает список всех документов.
+  
   1. Извлекает X = combined_features, y = labels
+     из всего списка
   2. StratifiedKFold (5 фолдов)
   3. RandomizedSearchCV:
      • n_estimators: {100, 200, 500}
@@ -24,6 +27,11 @@ note right of RFTrain
   4. Оптимизация по F1-score
   5. Финальное обучение на всех данных
      с лучшими гиперпараметрами
+  
+  <b>Важно:</b> получает весь список целиком
+  для формирования полной матрицы X и
+  вектора y. Обучение происходит на всех
+  данных (Fraud + Non-Fraud).
 end note
 
 RFTrain -> FS : сохраняет артефакты\n• rf_model.joblib\n• feature_names.json
@@ -38,11 +46,16 @@ note right of FS
   Preparator'ом.
   
   <b>Для инференса потребуются</b>
-  все четыре файла.
+  все четыре файла:
+  • rf_model.joblib
+  • tfidf_vectorizer.pkl
+  • feature_scaler.pkl
+  • feature_names.json
 end note
 
 deactivate RFTrain
 
+RFTrain --> Train : void
 Train --> Dev : void
 deactivate Train
 

@@ -8,7 +8,7 @@ left to right direction
 
 ' ========= Интерфейс ядра (повтор для связей) =========
 interface Preparator <<Core>> {
-  + prepare(rawData: Any) : ProcessorInput
+  + prepare(rawData: Any) : List<ProcessorInput>
 }
 
 ' ========= Основной класс =========
@@ -20,7 +20,7 @@ class TextFraudPreparator <<User>> {
   - cleaner: TextCleaner
   - ling_extractor: LinguisticFeatureExtractor
   ..
-  + prepare(rawData: Any) : FraudDetectionInput
+  + prepare(rawData: Any) : List<FraudDetectionInput>
   - load_artifacts() : void
   - save_artifacts() : void
   - extract_tfidf(texts: List[str]) : ndarray
@@ -31,18 +31,31 @@ note bottom of TextFraudPreparator
   <b>Реализация интерфейса Preparator</b>
   для текстовой задачи антифрода.
   
+  <b>Возвращает:</b> List<FraudDetectionInput>
+  (для одного документа — список из 1 элемента)
+  
   <b>fit_mode = True:</b>
-  • Обучает TF-IDF векторизатор
-  • Обучает StandardScaler
+  • Обучает TF-IDF векторизатор на всём корпусе
+  • Обучает StandardScaler на всём корпусе
   • Сохраняет артефакты на диск
   
   <b>fit_mode = False:</b>
   • Загружает артефакты с диска
   • Применяет обученные трансформеры
+  к каждому элементу списка
   
   Это реализует рекомендацию главы 2
   про переиспользование Preparator'а
   между пайплайнами обучения и инференса.
+  
+  <b>Важно:</b> Preparator НЕ фильтрует
+  Non-Fraud — возвращает все документы.
+  Фильтрацию выполняет AETrainer.
+  Так достигается переиспользование
+  Preparator'а между RF и AE.
+  
+  FraudDetectionInput наследует ProcessorInput
+  (см. dto_class_diagram_full)
 end note
 
 class TextCleaner <<Utility>> {

@@ -24,14 +24,18 @@ note right of Prep
   5. Формирование combined_features
   6. Сохранение артефактов на диск
   
-  Возвращает FraudDetectionInput с:
+  Возвращает List<FraudDetectionInput>
+  для всех документов, каждый с:
   • combined_features (X)
   • label (y)
+  
+  Список содержит все документы
+  (и Fraud, и Non-Fraud).
 end note
 
 Prep -> FS : сохраняет артефакты\n(TfidfVectorizer, StandardScaler)
 
-Prep --> Train : List[FraudDetectionInput]\n(combined_features + labels)
+Prep --> Train : List<FraudDetectionInput>\n(combined_features + labels\nдля всех документов)
 deactivate Prep
 
 @enduml

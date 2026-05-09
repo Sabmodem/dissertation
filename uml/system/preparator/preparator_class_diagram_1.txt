@@ -8,13 +8,17 @@ left to right direction
 
 ' ========= Интерфейс ядра =========
 interface Preparator <<Core>> {
-  + prepare(rawData: Any) : ProcessorInput
+  + prepare(rawData: Any) : List<ProcessorInput>
 }
 
 note top of Preparator
   <b>Интерфейс ядра фреймворка</b>
   Определён в главе 2.
   Пользователь обязан реализовать.
+  
+  <b>Возвращает список:</b>
+  List<ProcessorInput>.
+  Для одного элемента — список из 1.
 end note
 
 ' ========= Вспомогательные классы =========
@@ -41,6 +45,9 @@ note right of LinguisticFeatureExtractor
   
   <b>Не имеет состояния.</b>
   Все методы — чистые функции.
+  
+  Вызывается Preparator'ом для каждого
+  элемента списка при подготовке данных.
 end note
 
 class TextCleaner <<Utility>> {
@@ -62,6 +69,9 @@ note right of TextCleaner
   <b>Важно:</b> НЕ удаляет цифры и
   НЕ удаляет все стоп-слова —
   как обосновано в разделе 1.1.5.
+  
+  Вызывается Preparator'ом для каждого
+  элемента списка при очистке текстов.
 end note
 
 @enduml
