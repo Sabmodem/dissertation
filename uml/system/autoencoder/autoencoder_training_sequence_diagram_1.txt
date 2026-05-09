@@ -17,13 +17,18 @@ activate Prep
 
 note right of Prep
   <b>fit_mode = True</b>
-  • Очистка текста
+  • Очистка текста для каждого документа
   • Извлечение лингвистических признаков
-  • Обучение TfidfVectorizer и Scaler
+  • Обучение TfidfVectorizer на всём корпусе
+  • Обучение StandardScaler на всём корпусе
   • Формирование combined_features
   
+  Возвращает List<FraudDetectionInput>
+  для всех документов, с метками.
+  
   <b>Важно:</b> Preparator НЕ фильтрует
-  Non-Fraud — возвращает все документы.
+  Non-Fraud — возвращает все документы
+  (и Fraud, и Non-Fraud).
   Фильтрацию выполнит AETrainer.
   Так достигается переиспользование
   Preparator'а между RF и AE.
@@ -31,7 +36,7 @@ end note
 
 Prep -> FS : сохраняет артефакты\n(TfidfVectorizer, StandardScaler)
 
-Prep --> Train : List[FraudDetectionInput]\n(все документы, с метками)
+Prep --> Train : List<FraudDetectionInput>\n(все документы, с метками)
 deactivate Prep
 
 @enduml

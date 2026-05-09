@@ -38,6 +38,24 @@ note top of User
   <b>Две парадигмы:</b>
   правила и supervised (RF).
   Три интерфейса ядра реализованы.
+  
+  Все реализации работают со списками:
+  • process(List<FraudDetectionInput>) → List<FraudDetectionOutput>
+  • train(List<FraudDetectionInput>) → void
+  • interpret(List<FraudDetectionOutput>) → Any
+end note
+
+note bottom of RuleMod
+  <b>Rule-based:</b> не требует обучения.
+  Только Processor + Interpreter.
+  Конфигурация из RuleConfig.
+end note
+
+note bottom of RFMod
+  <b>Random Forest:</b> supervised.
+  Trainer + Processor + Interpreter.
+  Модель сохраняется/загружается
+  из файловой системы.
 end note
 
 @enduml

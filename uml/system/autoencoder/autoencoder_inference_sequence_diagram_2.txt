@@ -8,31 +8,33 @@ actor "Исследователь" as Dev
 participant "InferencePipeline" as Inf
 participant "AEInterpreter" as AEInterp
 
-Inf -> Inf : получены FraudDetectionOutput\nдля всех документов
+Inf -> Inf : получен List<FraudDetectionOutput>\nдля всех документов
 
-loop для каждого FraudDetectionOutput
-
-  Inf -> AEInterp : interpret(FraudDetectionOutput)
-  activate AEInterp
-
-  note right of AEInterp
-    <b>Интерпретация AE</b>
-    1. Сравнивает anomaly_score с 1.0
-    2. Формирует объяснение:
-       "MSE: 0.034, порог: 0.021.
-        Превышение в 1.6 раза."
-    3. Накапливает ошибки для гистограммы
-  end note
-
-  AEInterp -> AEInterp : накопление ошибок\nдля итоговой гистограммы
-
-  AEInterp --> Inf : отчёт с anomaly_score
-  deactivate AEInterp
-
-end
-
-Inf -> AEInterp : plot_reconstruction_error()
+Inf -> AEInterp : interpret(List<FraudDetectionOutput>)
 activate AEInterp
+
+note right of AEInterp
+  <b>Интерпретация AE (агрегированная)</b>
+  
+  Получает ВСЕ результаты сразу.
+  
+  Для каждого FraudDetectionOutput:
+  1. Сравнивает anomaly_score с 1.0
+  2. Формирует объяснение:
+     "MSE: 0.034, порог: 0.021.
+      Превышение в 1.6 раза."
+  3. Накапливает ошибки для гистограммы
+  
+  <b>Агрегированная аналитика:</b>
+  • Статистика anomaly_score по всем документам
+  • Распределение MSE восстановления
+  • Доля документов с превышением порога
+  • Сравнение средних ошибок Fraud vs Non-Fraud
+end note
+
+AEInterp -> AEInterp : накопление ошибок\nдля итоговой гистограммы
+
+AEInterp -> AEInterp : построение гистограммы\nраспределения ошибок
 
 note right of AEInterp
   <b>Итоговая визуализация:</b>
@@ -44,9 +46,14 @@ note right of AEInterp
   • хвост аномалий (высокая ошибка)
   
   Ключевой график для главы 4.
+  
+  <b>Преимущество:</b> получая весь список,
+  интерпретатор строит гистограмму сразу,
+  без дополнительного накопления данных
+  во внешнем хранилище.
 end note
 
-AEInterp --> Inf : график
+AEInterp --> Inf : сводный отчёт + гистограмма
 deactivate AEInterp
 
 Inf --> Dev : сводный результат + график

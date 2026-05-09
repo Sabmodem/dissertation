@@ -21,13 +21,14 @@ note right of Prep
   • Для Rule-based TF-IDF вычисляется,
     но НЕ используется процессором
   • linguistic_features извлекаются
-    в полном объёме
-  • Возвращает список FraudDetectionInput
+    в полном объёме для каждого документа
+  • Возвращает List<FraudDetectionInput>
+    для всех документов
 end note
 
 Prep -> FS : загружает артефакты\n(TfidfVectorizer, StandardScaler)
 
-Prep --> Inf : List[FraudDetectionInput]
+Prep --> Inf : List<FraudDetectionInput>\n(все документы)
 deactivate Prep
 
 @enduml

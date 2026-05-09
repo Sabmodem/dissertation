@@ -260,7 +260,7 @@ class KerasModel(BaseModel):
         Save the trained Keras model.
         
         Args:
-            filepath: Path where the model should be saved (should end with .h5 or .keras)
+            filepath: Path where the model should be saved (should end with .keras or .keras)
         """
         if not self.is_trained:
             raise RuntimeError("Model must be trained before saving.")

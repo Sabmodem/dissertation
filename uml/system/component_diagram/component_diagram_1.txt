@@ -23,16 +23,22 @@ package "Ядро фреймворка (Core)" as Core {
 }
 
 ' Связи
-PrepI ..> PI : <<создаёт>>
-ProcI ..> PI : <<использует>>
-ProcI ..> PO : <<создаёт>>
-TrainI ..> PI : <<использует>>
-InterpI ..> PO : <<использует>>
+PrepI ..> PI : <<создаёт список>>
+ProcI ..> PI : <<использует список>>
+ProcI ..> PO : <<создаёт список>>
+TrainI ..> PI : <<использует список>>
+InterpI ..> PO : <<использует список>>
 
 note top of Core
   <b>Ядро фреймворка — неизменяемо</b>
   Абстрактные контракты и интерфейсы.
   Не зависит от предметной области.
+  
+  <b>Все интерфейсы оперируют списками:</b>
+  • prepare(rawData) → List<ProcessorInput>
+  • process(List<ProcessorInput>) → List<ProcessorOutput>
+  • train(List<ProcessorInput>) → void
+  • interpret(List<ProcessorOutput>) → Any
 end note
 
 @enduml

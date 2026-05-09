@@ -20,39 +20,47 @@ note right of Prep
   <b>fit_mode = False</b>
   Загружает TfidfVectorizer и Scaler,
   применяет к новым данным.
-  Возвращает FraudDetectionInput
-  с combined_features (без меток).
+  Возвращает List<FraudDetectionInput>
+  с combined_features (без меток)
+  для всех документов.
 end note
 
 Prep -> FS : загружает артефакты\n(TfidfVectorizer, StandardScaler)
 
-Prep --> Inf : List[FraudDetectionInput]
+Prep --> Inf : List<FraudDetectionInput>\n(все документы)
 deactivate Prep
 
-loop для каждого FraudDetectionInput
+Inf -> AEProc : process(List<FraudDetectionInput>)
+activate AEProc
 
-  Inf -> AEProc : process(FraudDetectionInput)
-  activate AEProc
+AEProc -> FS : загружает артефакты ОДИН раз\n(autoencoder_model.keras,\nanomaly_threshold.json)
 
-  AEProc -> FS : загружает артефакты\n(autoencoder_model.h5,\nanomaly_threshold.json,\nfeature_scaler.pkl)
+note right of AEProc
+  <b>Инференс AE</b>
+  Получает список всех входов.
+  Модель и порог загружаются ОДИН раз.
 
-  note right of AEProc
-    <b>Инференс AE</b>
-    1. Загружает модель и порог
-    2. Извлекает combined_features
-    3. model.predict() → восстановленный вектор
-    4. MSE = средний квадрат ошибки
-    5. anomaly_score = MSE / threshold
-    6. Если MSE > threshold → prediction = 1
-    7. Формирует FraudDetectionOutput:
-       prediction, anomaly_score,
-       method_name = "Autoencoder",
-       explanation = {mse, threshold}
-  end note
+  <b>Важно:</b> combined_features уже
+  нормализованы Preparator'ом.
+  AEProcessor НЕ загружает Scaler.
 
-  AEProc --> Inf : FraudDetectionOutput
-  deactivate AEProc
+  Для каждого элемента списка:
+  1. Извлекает combined_features
+    (уже нормализованные)
+  2. model.predict() → восстановленный вектор
+  3. MSE = средний квадрат ошибки
+  4. anomaly_score = MSE / threshold
+  5. Если MSE > threshold → prediction = 1
+  6. Формирует FraudDetectionOutput:
+     prediction, anomaly_score,
+     method_name = "Autoencoder",
+     explanation = {mse, threshold}
+  
+  Возвращает List<FraudDetectionOutput>
+  со всеми результатами.
+end note
 
-end
+AEProc --> Inf : List<FraudDetectionOutput>
+deactivate AEProc
 
 @enduml

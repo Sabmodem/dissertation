@@ -17,7 +17,7 @@ package "Пользовательские Реализации" as User {
 
 package "Внешние Интерфейсы" as Ext {
   component "Raw Data\n(CSV, JSON, Images...)" as Raw
-  component "File System\n(model.pkl, model.h5...)" as FS
+  component "File System\n(model.pkl, model.keras...)" as FS
   database "External Systems\n(DB, APIs, Alerts)" as ExtSys
 }
 

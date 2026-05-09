@@ -7,11 +7,11 @@ skinparam interfaceBorderColor SteelBlue
 left to right direction
 
 interface Processor <<Core>> {
-  + process(input: ProcessorInput) : ProcessorOutput
+  + process(input: List<ProcessorInput>) : List<ProcessorOutput>
 }
 
 interface Interpreter <<Core>> {
-  + interpret(output: ProcessorOutput) : Any
+  + interpret(output: List<ProcessorOutput>) : Any
 }
 
 class AutoencoderModel <<Model>> {
@@ -22,10 +22,9 @@ class AutoencoderModel <<Model>> {
 class AEProcessor <<User>> {
   - model: AutoencoderModel
   - threshold: float
-  - scaler: StandardScaler
   - model_path: str
   ..
-  + process(input: FraudDetectionInput) : FraudDetectionOutput
+  + process(input: List<FraudDetectionInput>) : List<FraudDetectionOutput>
   - load_artifacts() : void
   - compute_anomaly_score(error: float, threshold: float) : float
 }
@@ -33,24 +32,27 @@ class AEProcessor <<User>> {
 note bottom of AEProcessor
   <b>Реализация интерфейса Processor</b>
   
-  <b>Загружает:</b>
-  • autoencoder_model.h5
+  <b>Загружает (один раз для всего списка):</b>
+  • autoencoder_model.keras
   • anomaly_threshold.json
-  • feature_scaler.pkl
-  
-  <b>Инференс:</b>
-  1. Извлекает combined_features
+
+  <b>Инференс для каждого элемента списка:</b>
+  1. Извлекает combined_features (уже нормализованные Preparator'ом)
   2. Прогоняет через автоэнкодер
   3. Вычисляет MSE восстановления
   4. Если MSE > threshold → аномалия
   5. Нормализует anomaly_score в [0, 1]
   
+  <b>Возвращает:</b> List<FraudDetectionOutput>
+  
   <b>Модель обучена на Non-Fraud</b> →
-  аномалии восстанавливаются хуже
+  аномалии восстанавливаются хуже.
+  Модель загружается один раз для
+  всего списка входов.
 end note
 
 class AEInterpreter <<User>> {
-  + interpret(output: FraudDetectionOutput) : Any
+  + interpret(output: List<FraudDetectionOutput>) : Any
   ..
   - plot_reconstruction_error(outputs: List[FraudDetectionOutput]) : void
   - format_report(report_id: str, anomaly_score: float, error: float, threshold: float) : str
@@ -59,20 +61,32 @@ class AEInterpreter <<User>> {
 note bottom of AEInterpreter
   <b>Реализация интерфейса Interpreter</b>
   
+  Получает ВСЕ результаты сразу.
+  
   1. Гистограмма распределения ошибок
+     восстановления для всех документов
   2. Сравнение anomaly_score с порогом
+     для каждого документа
   3. Объяснение: ошибка восстановления,
      превышение порога
   
+  <b>Агрегированная визуализация:</b>
+  • Гистограмма MSE для всех документов
+  • Ожидается бимодальное распределение:
+    пик нормальных (низкая ошибка) и
+    хвост аномалий (высокая ошибка)
+  
   <b>Для главы 4:</b> визуализация
-  разделимости классов AE и RF
+  разделимости классов AE и RF.
+  Получение всего списка позволяет
+  строить сводные графики.
 end note
 
 AEProcessor .up.|> Processor : реализует
 AEInterpreter .up.|> Interpreter : реализует
 AEProcessor *-- AutoencoderModel : композиция
-FraudDetectionInput .. AEProcessor : <<использует>>
-FraudDetectionOutput .. AEProcessor : <<создаёт>>
-FraudDetectionOutput .. AEInterpreter : <<использует>>
+FraudDetectionInput .. AEProcessor : <<использует список>>
+FraudDetectionOutput .. AEProcessor : <<создаёт список>>
+FraudDetectionOutput .. AEInterpreter : <<использует список>>
 
 @enduml

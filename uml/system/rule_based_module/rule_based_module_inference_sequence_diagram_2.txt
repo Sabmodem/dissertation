@@ -9,45 +9,68 @@ participant "InferencePipeline" as Inf
 participant "RuleBasedFraudProcessor" as RProc
 participant "RuleBasedFraudInterpreter" as RInterp
 
-Inf -> Inf : получен List[FraudDetectionInput]\n(от Preparator)
+Inf -> Inf : получен List<FraudDetectionInput>\n(от Preparator)
 
-loop для каждого FraudDetectionInput
+Inf -> RProc : process(List<FraudDetectionInput>)
+activate RProc
 
-  Inf -> RProc : process(FraudDetectionInput)
-  activate RProc
+note right of RProc
+  <b>Rule-based инференс (весь список)</b>
+  
+  Получает список всех входов.
+  
+  Для каждого элемента списка:
+  1. Извлекает linguistic_features
+  2. Проверяет правила:
+     Word Count, Fog Index, Sentiment,
+     Passive Voice, Uncertainty
+  3. Если сработало ≥ min_rules_triggered
+     → prediction = 1 (Fraud)
+  4. Формирует FraudDetectionOutput
+     с method_name = "RuleBased"
+     и списком сработавших правил
+  
+  Возвращает List<FraudDetectionOutput>
+  со всеми результатами.
+  
+  <b>Примечание:</b> Rule-based процессор
+  не загружает модели — работает
+  только с лингвистическими признаками
+  и конфигурацией правил.
+end note
 
-  note right of RProc
-    <b>Rule-based инференс</b>
-    1. Извлекает linguistic_features
-    2. Проверяет правила:
-       Word Count, Fog Index, Sentiment,
-       Passive Voice, Uncertainty
-    3. Если сработало ≥ min_rules_triggered
-       → prediction = 1 (Fraud)
-    4. Формирует FraudDetectionOutput
-       с method_name = "RuleBased"
-       и списком сработавших правил
-  end note
+RProc --> Inf : List<FraudDetectionOutput>
+deactivate RProc
 
-  RProc --> Inf : FraudDetectionOutput
-  deactivate RProc
+Inf -> RInterp : interpret(List<FraudDetectionOutput>)
+activate RInterp
 
-  Inf -> RInterp : interpret(FraudDetectionOutput)
-  activate RInterp
+note right of RInterp
+  <b>Интерпретация (агрегированная)</b>
+  
+  Получает ВСЕ результаты сразу.
+  
+  Для каждого FraudDetectionOutput:
+  • Форматирует объяснение
+  • Логирует в консоль/файл
+  
+  <b>Агрегированная аналитика:</b>
+  • Сводная статистика срабатывания правил:
+    - Какие правила срабатывают чаще всего
+    - Среднее количество сработавших правил
+    - Распределение prediction (Fraud/Non-Fraud)
+  • Сравнение с порогами из конфигурации
+  • Выявление правил, которые ни разу
+    не сработали (возможно, пороги
+    слишком высокие)
+  
+  Возвращает сводный отчёт с аналитикой.
+end note
 
-  note right of RInterp
-    <b>Интерпретация</b>
-    • Форматирует объяснение
-    • Логирует в консоль/файл
-    • Возвращает отчёт
-  end note
+RInterp --> Inf : сводный отчёт + агрегированная аналитика
+deactivate RInterp
 
-  RInterp --> Inf : Any (отчёт)
-  deactivate RInterp
-
-end
-
-Inf --> Dev : Any (сводный результат)
+Inf --> Dev : Any (сводный результат с аналитикой)
 deactivate Inf
 
 @enduml

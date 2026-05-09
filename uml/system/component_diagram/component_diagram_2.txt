@@ -29,8 +29,17 @@ InfP .. ProcI : <<requires>>
 InfP .. InterpI : <<requires>>
 
 note bottom of Pipelines
-  <b>TrainPipeline:</b> подготовка → обучение
-  <b>InferencePipeline:</b> подготовка → процессинг → интерпретация
+  <b>TrainPipeline:</b>
+  1. List<ProcessorInput> = preparator.prepare(rawData)
+  2. trainer.train(List<ProcessorInput>)
+  
+  <b>InferencePipeline:</b>
+  1. List<ProcessorInput> = preparator.prepare(rawData)
+  2. List<ProcessorOutput> = processor.process(List<ProcessorInput>)
+  3. Any = interpreter.interpret(List<ProcessorOutput>)
+  
+  Пайплайны передают списки целиком
+  между этапами.
 end note
 
 @enduml

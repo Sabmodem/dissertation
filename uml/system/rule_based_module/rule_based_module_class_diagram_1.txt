@@ -8,11 +8,11 @@ left to right direction
 
 ' ========= Интерфейсы ядра =========
 interface Processor <<Core>> {
-  + process(input: ProcessorInput) : ProcessorOutput
+  + process(input: List<ProcessorInput>) : List<ProcessorOutput>
 }
 
 interface Interpreter <<Core>> {
-  + interpret(output: ProcessorOutput) : Any
+  + interpret(output: List<ProcessorOutput>) : Any
 }
 
 ' ========= Конфигурация правил =========
@@ -34,6 +34,10 @@ note right of RuleConfig
   минимальное количество сработавших
   правил для классификации документа
   как мошеннического (агрегация).
+  
+  Конфигурация загружается один раз
+  и применяется ко всем элементам
+  списка при обработке.
 end note
 
 @enduml

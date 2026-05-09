@@ -7,7 +7,7 @@ skinparam interfaceBorderColor SteelBlue
 left to right direction
 
 interface Trainer <<Core>> {
-  + train(input: ProcessorInput) : void
+  + train(input: List<ProcessorInput>) : void
 }
 
 class AutoencoderModel <<Model>> {
@@ -40,13 +40,12 @@ end note
 class AETrainer <<User>> {
   - model: AutoencoderModel
   - threshold: float
-  - scaler: StandardScaler
   - model_path: str
   - input_dim: int
   - latent_dim: int
   ..
-  + train(input: FraudDetectionInput) : void
-  - filter_non_fraud(input: FraudDetectionInput) : ndarray
+  + train(input: List<FraudDetectionInput>) : void
+  - filter_non_fraud(input: List<FraudDetectionInput>) : ndarray
   - compute_threshold(model: AutoencoderModel, X_val: ndarray) : float
   - save_artifacts() : void
 }
@@ -55,20 +54,29 @@ note bottom of AETrainer
   <b>Реализация интерфейса Trainer</b>
   (обучение без учителя)
   
+  Получает список всех документов.
+  
   1. Фильтрует ТОЛЬКО Non-Fraud (label=0)
+     из всего списка
   2. Разбивает на train/validation (80/20)
   3. Обучает AutoencoderModel
   4. Вычисляет порог: 95-й перцентиль MSE
      на валидации
   5. Сохраняет модель и порог
-  
+     (scaler уже сохранён Preparator'ом)
+
   <b>95-й перцентиль</b> — снижает ложные
   срабатывания (~5% нормальных могут
   иметь повышенную ошибку)
+  
+  <b>Важно:</b> фильтрация Non-Fraud
+  происходит внутри AETrainer,
+  а не в Preparator'е. Так Preparator
+  остаётся универсальным для RF и AE.
 end note
 
 AETrainer .up.|> Trainer : реализует
 AETrainer *-- AutoencoderModel : композиция
-FraudDetectionInput .. AETrainer : <<использует>>
+FraudDetectionInput .. AETrainer : <<использует список>>
 
 @enduml

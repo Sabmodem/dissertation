@@ -6,13 +6,13 @@ skinparam interfaceBackgroundColor LightCyan
 skinparam interfaceBorderColor SteelBlue
 left to right direction
 
-' ========= Интерфейсы ядра (сокращённо) =========
+' ========= Интерфейсы ядра =========
 interface Processor <<Core>> {
-  + process(input: ProcessorInput) : ProcessorOutput
+  + process(input: List<ProcessorInput>) : List<ProcessorOutput>
 }
 
 interface Interpreter <<Core>> {
-  + interpret(output: ProcessorOutput) : Any
+  + interpret(output: List<ProcessorOutput>) : Any
 }
 
 ' ========= Основные классы =========
@@ -20,7 +20,7 @@ class RuleBasedFraudProcessor <<User>> {
   - config: RuleConfig
   - rules_triggered: dict
   ..
-  + process(input: FraudDetectionInput) : FraudDetectionOutput
+  + process(input: List<FraudDetectionInput>) : List<FraudDetectionOutput>
   - check_word_count(ling: dict) : bool
   - check_fog_index(ling: dict) : bool
   - check_sentiment(ling: dict) : bool
@@ -33,18 +33,28 @@ note bottom of RuleBasedFraudProcessor
   <b>Реализация интерфейса Processor</b>
   для Rule-based детектора.
   
-  <b>Логика:</b>
+  Получает список всех входов.
+  
+  <b>Для каждого элемента списка:</b>
   1. Извлекает linguistic_features
   2. Проверяет каждое правило
   3. Если сработало ≥ min_rules_triggered
      → помечает как Fraud
+  4. Формирует FraudDetectionOutput
+  
+  <b>Возвращает:</b> List<FraudDetectionOutput>
   
   <b>Игнорирует</b> tfidf_features и
-  combined_features.
+  combined_features (использует только
+  лингвистические признаки).
+  
+  <b>Преимущество:</b> не требует
+  предварительного обучения,
+  не загружает модели из файлов.
 end note
 
 class RuleBasedFraudInterpreter <<User>> {
-  + interpret(output: FraudDetectionOutput) : Any
+  + interpret(output: List<FraudDetectionOutput>) : Any
   ..
   - format_alert(output: FraudDetectionOutput) : str
   - log_to_console(report_id: str, rules: List[str]) : void
@@ -53,13 +63,24 @@ class RuleBasedFraudInterpreter <<User>> {
 note bottom of RuleBasedFraudInterpreter
   <b>Реализация интерфейса Interpreter</b>
   
-  <b>Постобработка:</b>
+  Получает ВСЕ результаты сразу.
+  
+  <b>Постобработка для каждого результата:</b>
   • Форматирует читаемое объяснение
   • Логирует в консоль/файл
-  • Возвращает структурированный отчёт
+  
+  <b>Агрегированная аналитика:</b>
+  • Сводная статистика срабатывания правил
+  • Какие правила срабатывают чаще всего
+  • Распределение количества сработавших правил
+  • Сравнение с порогами из конфигурации
   
   <b>Для Production:</b> расширяется
   отправкой алертов в Telegram/Slack/БД.
+  
+  Получение всего списка позволяет
+  строить сводную статистику по всем
+  документам.
 end note
 
 ' ========= Наследование =========
@@ -67,8 +88,8 @@ RuleBasedFraudProcessor .up.|> Processor : реализует
 RuleBasedFraudInterpreter .up.|> Interpreter : реализует
 
 ' ========= Связи с DTO =========
-FraudDetectionInput .. RuleBasedFraudProcessor : <<использует>>
-FraudDetectionOutput .. RuleBasedFraudProcessor : <<создаёт>>
-FraudDetectionOutput .. RuleBasedFraudInterpreter : <<использует>>
+FraudDetectionInput .. RuleBasedFraudProcessor : <<использует список>>
+FraudDetectionOutput .. RuleBasedFraudProcessor : <<создаёт список>>
+FraudDetectionOutput .. RuleBasedFraudInterpreter : <<использует список>>
 
 @enduml

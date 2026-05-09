@@ -9,20 +9,37 @@ participant "TrainPipeline" as Train
 participant "AETrainer" as AETrain
 collections "Файловая\nсистема" as FS
 
-Train -> AETrain : train(FraudDetectionInput)
+Train -> AETrain : train(List<FraudDetectionInput>)
 activate AETrain
 
-AETrain -> AETrain : filter_non_fraud()\nоставляет только label=0
+note right of AETrain
+  <b>Получает список всех документов</b>
+  (Fraud + Non-Fraud).
+  
+  В отличие от RFTrainer, который
+  обучается на всех данных,
+  AETrainer должен отфильтровать
+  только Non-Fraud для обучения
+  автоэнкодера.
+end note
+
+AETrain -> AETrain : filter_non_fraud()\nоставляет только label=0\nиз всего списка
 
 note right of AETrain
   <b>Фильтрация Non-Fraud</b>
+  Извлекает только документы с label=0
+  из полученного списка.
+  
   Автокодировщик обучается только
   на нормальных данных —
   это принципиально для
   unsupervised anomaly detection.
+  
+  Fraud-документы (label=1)
+  отбрасываются на этом этапе.
 end note
 
-AETrain -> AETrain : split train/validation\n(80/20)
+AETrain -> AETrain : split train/validation\n(80/20) на Non-Fraud
 
 AETrain -> AETrain : построение архитектуры\nAutoencoderModel
 
@@ -37,6 +54,8 @@ note right of AETrain
   • loss = MSE, optimizer = Adam(lr=0.001)
   • batch_size = 32, epochs ≤ 100
   • early stopping (patience = 10 эпох)
+  
+  Обучение только на Non-Fraud данных.
 end note
 
 AETrain -> AETrain : обучение на train\nс валидацией на validation
@@ -45,24 +64,41 @@ AETrain -> AETrain : compute_threshold()\n95-й перцентиль MSE\nна v
 
 note right of AETrain
   <b>Вычисление порога:</b>
-  MSE восстановления для валидации.
+  MSE восстановления для валидации
+  (только Non-Fraud).
+  
   Порог = 95-й перцентиль распределения.
   95% нормальных — ниже порога,
   5% — выше (допустимые false positives).
+  
+  Этот порог будет использоваться
+  при инференсе для классификации
+  аномалий.
 end note
 
-AETrain -> FS : сохраняет артефакты\n• autoencoder_model.h5\n• anomaly_threshold.json
+AETrain -> FS : сохраняет артефакты\n• autoencoder_model.keras\n• anomaly_threshold.json
 
 note right of FS
   <b>Сохраняемые артефакты:</b>
-  • autoencoder_model.h5 — веса модели
+  • autoencoder_model.keras — веса модели
   • anomaly_threshold.json — порог
   
   TfidfVectorizer и Scaler уже
   сохранены Preparator'ом.
   
-  <b>Для инференса потребуются</b>
-  все три файла + артефакты Preparator'а.
+  <b>Для инференса потребуются:</b>
+  <b>Артефакты AE (загружает AEProcessor):</b>
+  • autoencoder_model.keras
+  • anomaly_threshold.json
+
+  <b>Артефакты Preparator'а (загружает Preparator):</b>
+  • tfidf_vectorizer.pkl
+  • feature_scaler.pkl
+
+  <b>Разделение ответственности:</b>
+  • Preparator нормализует данные scaler'ом
+  • AEProcessor получает уже нормализованные
+    combined_features и не работает со scaler'ом
 end note
 
 deactivate AETrain

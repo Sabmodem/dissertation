@@ -23,7 +23,7 @@ package "Пользовательские реализации" as User {
 }
 
 package "Внешние интерфейсы" as Ext {
-  component "Model Storage\n(.joblib, .h5, .pkl, .json)" as ModelStore
+  component "Model Storage\n(.joblib, .keras, .pkl, .json)" as ModelStore
   database "Output Targets\n(БД, алерты, графики)" as OutTargets
   component "Rule Config\n(.json/.yaml)" as RuleConf
 }
@@ -38,11 +38,35 @@ AETrain ..> ModelStore : <<сохраняет>>
 AEProc ..> ModelStore : <<загружает>>
 AEInterp ..> OutTargets : <<записывает>>
 
+note top of AEMod
+  <b>Autoencoder:</b> unsupervised.
+  Trainer + Processor + Interpreter.
+  
+  Все работают со списками:
+  • train(List<FraudDetectionInput>) → void
+    (фильтрует Non-Fraud внутри)
+  • process(List<FraudDetectionInput>) → List<FraudDetectionOutput>
+    (модель загружается один раз)
+  • interpret(List<FraudDetectionOutput>) → Any
+    (агрегированная гистограмма ошибок)
+  <b>Важно:</b> AETrainer и AEProcessor
+  НЕ управляют StandardScaler.
+  Нормализация — зона ответственности
+  Preparator'а.
+  Модель загружается один раз
+  для всего списка входов.
+end note
+
 note bottom of Ext
   <b>Внешние зависимости</b>
   под контролем разработчика.
   Фреймворк не диктует формат
   файлов, тип БД, визуализацию.
+  
+  Модель загружается один раз
+  для всего списка входов.
+  Интерпретатор получает все результаты
+  для агрегированной аналитики.
 end note
 
 @enduml

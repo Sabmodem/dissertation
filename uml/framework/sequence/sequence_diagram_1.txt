@@ -56,7 +56,7 @@ note right of FS
   
   Форматы:
   • Python pickle (.pkl)
-  • TensorFlow/Keras (.h5)
+  • TensorFlow/Keras (.keras)
   • ONNX (.onnx)
   • PyTorch (.pt)
   • и другие

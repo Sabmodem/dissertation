@@ -6,14 +6,29 @@ skinparam interfaceBackgroundColor LightCyan
 skinparam interfaceBorderColor SteelBlue
 left to right direction
 
-interface Trainer <<Core>>
-interface Processor <<Core>>
-interface Interpreter <<Core>>
+interface Trainer <<Core>> {
+  + train(input: List<ProcessorInput>) : void
+}
+interface Processor <<Core>> {
+  + process(input: List<ProcessorInput>) : List<ProcessorOutput>
+}
+interface Interpreter <<Core>> {
+  + interpret(output: List<ProcessorOutput>) : Any
+}
 
-class AETrainer <<User>>
-class AEProcessor <<User>>
-class AEInterpreter <<User>>
-class AutoencoderModel <<Model>>
+class AETrainer <<User>> {
+  + train(input: List<FraudDetectionInput>) : void
+}
+class AEProcessor <<User>> {
+  + process(input: List<FraudDetectionInput>) : List<FraudDetectionOutput>
+}
+class AEInterpreter <<User>> {
+  + interpret(output: List<FraudDetectionOutput>) : Any
+}
+class AutoencoderModel <<Model>> {
+  + call(inputs: Tensor) : Tensor
+  + get_reconstruction_error(inputs: Tensor) : float
+}
 
 AETrainer .up.|> Trainer
 AEProcessor .up.|> Processor
@@ -22,16 +37,42 @@ AEInterpreter .up.|> Interpreter
 AETrainer *-- AutoencoderModel
 AEProcessor *-- AutoencoderModel
 
-FraudDetectionInput .. AETrainer
-FraudDetectionInput .. AEProcessor
-FraudDetectionOutput .. AEProcessor
-FraudDetectionOutput .. AEInterpreter
+FraudDetectionInput .. AETrainer : <<использует список>>
+FraudDetectionInput .. AEProcessor : <<использует список>>
+FraudDetectionOutput .. AEProcessor : <<создаёт список>>
+FraudDetectionOutput .. AEInterpreter : <<использует список>>
 
 note bottom of AutoencoderModel
   Input → Dense(128) → Dense(64)
   → Dense(16) → Dense(64)
   → Dense(128) → Dense(input_dim)
   latent_dim=16, loss=MSE, Adam
+end note
+
+note right of AETrainer
+  Получает список, фильтрует
+  Non-Fraud внутри, обучает
+  на всём наборе Non-Fraud.
+end note
+
+note right of AEProcessor
+  Получает список, загружает
+  модель один раз, обрабатывает
+  все элементы, возвращает список.
+end note
+
+note right of AEProcessor
+  Scaler НЕ загружается —
+  данные уже нормализованы
+  Preparator'ом (combined_features).
+  
+  Модель загружается один раз.
+end note
+
+note right of AEInterpreter
+  Получает список всех результатов,
+  строит агрегированную гистограмму
+  распределения ошибок.
 end note
 
 @enduml
