@@ -6,13 +6,13 @@ skinparam packageBackgroundColor White
 skinparam packageBorderColor DarkSlateGray
 
 package "Ядро Фреймворка" as Core {
-  component "DTO Contracts" as DTO
-  component "Interfaces\n(4 stage interfaces)" as Interfaces
-  component "Pipelines\n(Train + Inference)" as Pipelines
+  component "Data Contracts\n(ProcessorInput, ProcessorOutput)" as DTO
+  component "Interfaces\n(Preparator, Processor,\nInterpreter, Trainer)" as Interfaces
+  component "Pipelines\n(TrainPipeline, InferencePipeline)" as Pipelines
 }
 
 package "Пользовательские Реализации" as User {
-  component "Stage Implementations\n(MyPreparator, MyProcessor...)" as Impl
+  component "Stage Implementations\n(Preparator, Processor,\nInterpreter, Trainer)" as Impl
   component "Custom DTOs\n(MyInput, MyOutput)" as CustomDTO
 }
 
@@ -24,5 +24,28 @@ package "Внешние Интерфейсы" as Ext {
 
 Core --> User : <<точки расширения>>
 User --> Ext : <<Операции ввода/вывода>>
+
+note bottom of Core
+  <b>Все интерфейсы оперируют списками:</b>
+  • prepare(rawData) → List<ProcessorInput>
+  • process(List<ProcessorInput>) → List<ProcessorOutput>
+  • train(List<ProcessorInput>) → void
+  • interpret(List<ProcessorOutput>) → Any
+  
+  Пайплайны передают списки целиком
+  между этапами.
+end note
+
+note bottom of User
+  <b>Пользователь реализует интерфейсы,</b>
+  работающие со списками.
+  
+  Для одного элемента — список из 1.
+  
+  Подготовка возвращает список DTO.
+  Процессор обрабатывает весь список.
+  Интерпретатор получает все результаты
+  для агрегированной визуализации.
+end note
 
 @enduml

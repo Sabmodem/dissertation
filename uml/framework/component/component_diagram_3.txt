@@ -22,10 +22,8 @@ package "Внешние Интерфейсы" as Ext {
 }
 
 ' ========= Внешние зависимости =========
-MyPrep ..> Raw : <<читает>>
 MyProc ..> FS : <<читает модель>>
 MyTrain ..> FS : <<записывает модель>>
-MyInterp ..> ExtSys : <<записывает>>
 
 Raw ..> MyPrep : вход
 ExtSys <.. MyInterp : выход
@@ -37,14 +35,39 @@ note bottom of Ext
   Пользователь сам реализует чтение/запись.
 end note
 
+note top of MyPrep
+  prepare(rawData: Any)
+  → List<MyInput>
+  
+  Читает сырые данные,
+  преобразует в список DTO.
+end note
+
 note top of MyProc
+  process(input: List<MyInput>)
+  → List<MyOutput>
+  
   Загружает модель из файла
-  в process()
+  один раз для всего списка.
+  Обрабатывает все элементы.
 end note
 
 note top of MyTrain
-  Сохраняет модель в файл
-  в train()
+  train(input: List<MyInput>)
+  → void
+  
+  Обучает модель на всём
+  списке данных.
+  Сохраняет модель в файл.
+end note
+
+note top of MyInterp
+  interpret(output: List<MyOutput>)
+  → Any
+  
+  Получает все результаты сразу
+  для агрегированной интерпретации
+  (гистограммы, сводки, алерты).
 end note
 
 @enduml

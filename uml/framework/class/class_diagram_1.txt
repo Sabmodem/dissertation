@@ -16,32 +16,38 @@ abstract class ProcessorOutput <<DTO>> {
 
 ' ========= Интерфейсы этапов =========
 interface Preparator {
-  + prepare(rawData: Any) : ProcessorInput
+  + prepare(rawData: Any) : List<ProcessorInput>
 }
 
 interface Processor {
-  + process(input: ProcessorInput) : ProcessorOutput
+  + process(input: List<ProcessorInput>) : List<ProcessorOutput>
 }
 
 interface Interpreter {
-  + interpret(output: ProcessorOutput) : Any
+  + interpret(output: List<ProcessorOutput>) : Any
 }
 
 interface Trainer {
-  + train(input: ProcessorInput) : void
+  + train(input: List<ProcessorInput>) : void
 }
 
 ' ========= Связи интерфейсов =========
-Preparator ..> ProcessorInput : <<создает>>
-Processor ..> ProcessorInput : <<использует>>
-Processor ..> ProcessorOutput : <<создает>>
-Trainer ..> ProcessorInput : <<использует>>
-Interpreter ..> ProcessorOutput : <<использует>>
+Preparator ..> ProcessorInput : <<создаёт список>>
+Processor ..> ProcessorInput : <<использует списки>>
+Processor ..> ProcessorOutput : <<создаёт список>>
+Trainer ..> ProcessorInput : <<использует список>>
+Interpreter ..> ProcessorOutput : <<использует список>>
 
 note top of ProcessorInput
   <b>Точки расширения фреймворка</b>
   Пользователь <b>обязан</b> унаследовать
-  ProcessorInput и ProcessorOutput
+  ProcessorInput и ProcessorOutput.
+  
+  <b>Важно:</b> интерфейсы оперируют
+  списками: List<ProcessorInput>,
+  List<ProcessorOutput>.
+  Для одного элемента — список
+  из одного элемента.
 end note
 
 @enduml

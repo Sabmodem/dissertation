@@ -19,19 +19,23 @@ activate Prep
 note right of Prep
   <b>Этап подготовки</b>
   • Загрузка и валидация данных
-  • Преобразование в ProcessorInput
+  • Преобразование в список ProcessorInput
   • Аугментация данных
+  
+  Возвращает List<ProcessorInput>
+  (для одного элемента — список из 1)
 end note
 
-Prep --> Train : ProcessorInput
+Prep --> Train : List<ProcessorInput>
 deactivate Prep
 
-Train -> Trainer : train(ProcessorInput)
+Train -> Trainer : train(List<ProcessorInput>)
 activate Trainer
 
-Trainer -> Trainer : обучение модели
+Trainer -> Trainer : обучение модели на всём списке
 note right of Trainer
   <b>Этап обучения</b>
+  • Получает список всех данных
   • Инициализация модели
   • Цикл обучения (эпохи)
   • Валидация на отложенной выборке

@@ -8,19 +8,19 @@ left to right direction
 
 ' ========= Интерфейсы (дублируются для контекста) =========
 interface Preparator {
-  + prepare(rawData: Any) : ProcessorInput
+  + prepare(rawData: Any) : List<ProcessorInput>
 }
 
 interface Processor {
-  + process(input: ProcessorInput) : ProcessorOutput
+  + process(input: List<ProcessorInput>) : List<ProcessorOutput>
 }
 
 interface Interpreter {
-  + interpret(output: ProcessorOutput) : Any
+  + interpret(output: List<ProcessorOutput>) : Any
 }
 
 interface Trainer {
-  + train(input: ProcessorInput) : void
+  + train(input: List<ProcessorInput>) : void
 }
 
 ' ========= Пайплайны =========
@@ -52,16 +52,43 @@ InferencePipeline *-- Preparator
 InferencePipeline *-- Processor
 InferencePipeline *-- Interpreter
 
+note bottom of TrainPipeline
+  <b>TrainPipeline.run(rawData):</b>
+  1. List<ProcessorInput> = preparator.prepare(rawData)
+  2. trainer.train(весь список)
+  
+  Пайплайн передаёт список целиком.
+  Trainer сам решает, как обрабатывать
+  (батчами, целиком, фильтровать).
+end note
+
+note bottom of InferencePipeline
+  <b>InferencePipeline.run(rawData):</b>
+  1. List<ProcessorInput> = preparator.prepare(rawData)
+  2. List<ProcessorOutput> = processor.process(весь список)
+  3. Any = interpreter.interpret(весь список результатов)
+  
+  Пайплайн передаёт списки целиком.
+  Интерпретатор получает все результаты сразу
+  для агрегированной визуализации.
+end note
+
 note top of Processor
   Модель загружается из файла
   внутри process().
   Фреймворк не управляет этим.
+  
+  Принимает и возвращает списки.
+  Для одного элемента — список из 1.
 end note
 
 note top of Trainer
   train() сохраняет модель
   в файл (pickle, H5, ONNX...).
   Фреймворк не управляет форматом.
+  
+  Получает список ProcessorInput.
+  Для одного элемента — список из 1.
 end note
 
 @enduml

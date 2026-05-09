@@ -22,45 +22,65 @@ note right of Prep2
   • Загрузка входных данных
   • Предобработка (нормализация,
     токенизация, resize и т.д.)
-  • Формирование ProcessorInput
+  • Формирование списка ProcessorInput
+  
+  Возвращает List<ProcessorInput>
+  (для одного элемента — список из 1)
 end note
 
-Prep2 --> Inf : ProcessorInput
+Prep2 --> Inf : List<ProcessorInput>
 deactivate Prep2
 
-Inf -> Proc : process(ProcessorInput)
+Inf -> Proc : process(List<ProcessorInput>)
 activate Proc
 
-Proc -> FS2 : загружает модель из файла
+Proc -> FS2 : загружает модель из файла (один раз)
 note right of FS2
   <b>Загрузка модели</b>
   Из того же файла, что
   сохранил Trainer на этапе
-  обучения
+  обучения.
+  
+  Модель загружается ОДИН раз
+  для всего списка входов.
 end note
 
-Proc -> Proc : инференс
+Proc -> Proc : инференс для всех элементов списка
 note right of Proc
   <b>Инференс</b>
-  • Прямой проход модели
-  • Получение предсказаний
-  • Формирование ProcessorOutput
+  • Получает список всех входов
+  • Загружает модель один раз
+  • Для каждого элемента:
+    - прямой проход модели
+    - получение предсказаний
+    - формирование ProcessorOutput
+  • Возвращает список ProcessorOutput
+  
+  Может обрабатывать батчами
+  для эффективности GPU/CPU.
 end note
 
-Proc --> Inf : ProcessorOutput
+Proc --> Inf : List<ProcessorOutput>
 deactivate Proc
 
-Inf -> Interp : interpret(ProcessorOutput)
+Inf -> Interp : interpret(List<ProcessorOutput>)
 activate Interp
 
-Interp -> Interp : постобработка\n(графики, БД, алерты...)
+Interp -> Interp : агрегированная постобработка
 note right of Interp
   <b>Интерпретация</b>
+  • Получает ВСЕ результаты сразу
   • Постобработка результатов
-  • Генерация отчётов/графиков
+  • Генерация агрегированных отчётов:
+    - гистограммы распределения
+    - confusion matrix
+    - сводные метрики
   • Запись в БД
   • Отправка алертов
   • Возврат в бизнес-формате
+  
+  Преимущество: видит всю картину
+  для построения сводной статистики.
 end note
 
 Interp --> Inf : Any

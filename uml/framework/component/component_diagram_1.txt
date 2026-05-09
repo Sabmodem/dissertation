@@ -28,42 +28,59 @@ package "Ядро Фреймворка" as Core {
 }
 
 ' ========= Связи внутри фреймворка =========
-PrepI ..> PI : <<создает>>
-ProcI ..> PI : <<использует>>
-ProcI ..> PO : <<создает>>
-TrainI ..> PI : <<использует>>
-InterpI ..> PO : <<использует>>
+PrepI ..> PI : <<создаёт список>>
+ProcI ..> PI : <<использует список>>
+ProcI ..> PO : <<создаёт список>>
+TrainI ..> PI : <<использует список>>
+InterpI ..> PO : <<использует список>>
 
-TrainP .. PrepI : <<requires>>
-TrainP .. TrainI : <<requires>>
+TrainP *.. PrepI : <<владеет>>
+TrainP *.. TrainI : <<владеет>>
 
-InfP .. PrepI : <<requires>>
-InfP .. ProcI : <<requires>>
-InfP .. InterpI : <<requires>>
+InfP *.. PrepI : <<владеет>>
+InfP *.. ProcI : <<владеет>>
+InfP *.. InterpI : <<владеет>>
 
 ' ========= Примечания =========
 note right of TrainP
   <b>TrainPipeline</b>
   Владеет: Preparator, Trainer
+  Вход: rawData
   Выход: файл модели
+  
+  Логика:
+  List<ProcessorInput> = Preparator.prepare(rawData)
+  Trainer.train(List<ProcessorInput>)
 end note
 
 note right of InfP
   <b>InferencePipeline</b>
   Владеет: Preparator, Processor, Interpreter
+  Вход: rawData
   Выход: результат интерпретации
+  
+  Логика:
+  List<ProcessorInput> = Preparator.prepare(rawData)
+  List<ProcessorOutput> = Processor.process(List<ProcessorInput>)
+  Any = Interpreter.interpret(List<ProcessorOutput>)
 end note
 
 note bottom of DTO
   <b>Точки расширения</b>
   Пользователь обязан унаследовать
-  ProcessorInput и ProcessorOutput
+  ProcessorInput и ProcessorOutput.
+  
+  Интерфейсы оперируют списками.
+  Для одного элемента — список из 1.
 end note
 
 note bottom of Interfaces
   <b>Обязательные интерфейсы</b>
   Все 4 должны быть реализованы
-  пользователем
+  пользователем.
+  
+  Все методы принимают/возвращают
+  списки (List).
 end note
 
 @enduml

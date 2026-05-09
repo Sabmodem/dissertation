@@ -9,7 +9,7 @@ skinparam packageBorderColor DarkSlateGray
 
 package "Ядро Фреймворка" as Core {
   
-  package "контракты (DTO)" as DTO {
+  package "Контракты (DTO)" as DTO {
     component "ProcessorInput" as PI <<abstract>>
     component "ProcessorOutput" as PO <<abstract>>
   }
@@ -27,7 +27,7 @@ package "Пользовательские Реализации" as User {
   component "MyProcessor" as MyProc
   component "MyInterpreter" as MyInterp
   component "MyTrainer" as MyTrain
-  component "MyInput расширяет\nProcessorInput" as MyPI
+  component "MyInput расширяет\nnProcessorInput" as MyPI
   component "MyOutput расширяет\nProcessorOutput" as MyPO
 }
 
@@ -41,11 +41,38 @@ MyPO --|> PO : расширяет
 
 note right of User
   <b>Пользователь реализует:</b>
-  • 4 интерфейса этапов
+  • 4 интерфейса этапов (все работают со списками)
   • 2 контракта данных (DTO)
   
+  <b>Сигнатуры:</b>
+  • prepare(rawData) → List<ProcessorInput>
+  • process(List<ProcessorInput>) → List<ProcessorOutput>
+  • train(List<ProcessorInput>) → void
+  • interpret(List<ProcessorOutput>) → Any
+  
   Фреймворк вызывает пользовательский код
-  через эти точки расширения
+  через эти точки расширения.
+  Для одного элемента — список из 1 элемента.
+end note
+
+note bottom of MyPrep
+  prepare(rawData: Any)
+  → List<MyInput>
+end note
+
+note bottom of MyProc
+  process(input: List<MyInput>)
+  → List<MyOutput>
+end note
+
+note bottom of MyTrain
+  train(input: List<MyInput>)
+  → void
+end note
+
+note bottom of MyInterp
+  interpret(output: List<MyOutput>)
+  → Any
 end note
 
 @enduml

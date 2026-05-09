@@ -21,11 +21,10 @@ if (Сценарий?) then (<b>Обучение</b>)
   :Preparator.prepare(rawData)\nПреобразование сырых данных;
   
   note right
-    Возвращает ProcessorInput —
-    пользовательский DTO
+    Возвращает List<ProcessorInput>
   end note
   
-  :Trainer.train(ProcessorInput);
+  :Trainer.train(List<ProcessorInput>);
   
   :Обучение модели;
   
@@ -58,24 +57,20 @@ else (<b>Инференс</b>)
   :Preparator.prepare(rawData)\nПреобразование сырых данных;
   
   note right
-    Возвращает ProcessorInput —
-    пользовательский DTO
+    Возвращает List<ProcessorInput>
   end note
   
-  :Processor.process(ProcessorInput);
-  
-  :Загрузка модели из файла;
-  
+  :Processor.process(List<ProcessorInput>);
+    
   :Инференс (predict);
   
   note right
-    Возвращает ProcessorOutput —
-    пользовательский DTO.
+    Возвращает List<ProcessorOutput>
     Модель загружается внутри
     Processor.process().
   end note
   
-  :Interpreter.interpret(ProcessorOutput);
+  :Interpreter.interpret(List<ProcessorOutput>);
   
   :Постобработка результатов;
   
